@@ -1,0 +1,76 @@
+\documentclass[12pt]{article}
+\usepackage[mathletters]{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage{proof}
+\usepackage{amsmath}
+
+
+\title{Correspondece between Second-order logic and~Polymorphic lambda calculus}
+\author{Adam Krupicka\\
+        Faculty of Informatics\\
+        Masaryk University, Brno
+}
+\date{23.5.2016}
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+ABSTRACT
+\end{abstract}
+
+\section{Introduction}
+Into…
+
+\section{Simply typed lambda calculus}
+In this section we will remind the reader of the well-known correspondece between Natural deduction and the Simply typed λ calculus. We won't go into much detail here, as this is covered well in other literature.
+\subsection{Natural deduction}
+We will consider only the fragment of Natural deduction consisting of conjunction and implication. The proof system for this fragment is defined as follows:
+\paragraph{Introduction rules}
+$$
+\infer[\mathrm{∧I}]{A ∧ B}{A & B}
+\qquad
+\infer[\mathrm{⇒I}]{A → B}{\infer*{B}{[A]}}
+$$
+\paragraph{Elimination rules}
+$$
+\infer[\mathrm{∧₁E}]{A}{A ∧ B}
+\qquad
+\infer[\mathrm{∧₂E}]{B}{A ∧ B}
+\qquad
+\infer[\mathrm{⇒E}]{B}{A & A → B}
+$$
+\subsection{Simply typed λ calculus}
+The definition of the calculus's terms is inductive:
+\begin{itemize}
+    \item A variable $x:T$ is a term of type T,
+    \item If $u:U$ and $v:V$ are terms, then $⟨u,v⟩:(U × V)$ is a term (pair), 
+    \item If $t:(U × V)$ is a term, then $(π₁ \ t):U$ is a term (first projection),
+    \item If $t:(U × V)$ is a term, then $(π₂ \ t):V$ is a term (second projection),
+    \item If $t:T$ is a term, then $λx:U.t$ is a term of type U → V (abstraction),
+    \item If $u:(V → T)$ and $v:V$ are terms, then $u \ v$ is a term of type T (application).
+\end{itemize}
+\subsection{The correspondence}
+This can be observed between proof trees of natural deduction and types of terms constructed inside the calculus.
+\begin{itemize}
+    \item \mathrm{∧I} corresponds to the creation of pairs,
+    \item \mathrm{∧₁E} to first projection,
+    \item \mathrm{∧₂E} to second projection,
+    \item \mathrm{⇒I} to abstraction,
+    \item \mathrm{⇒E} to application.
+\end{itemize}
+\subsection{Pairs in the Simply typed λ calculus}
+It should be noted that, from the calculus's point of view, it isn't necessary to explicitly define pairs as we have done above. Pairs can be easily defined from within the calculus:
+\begin{align*}
+\mathrm{pair} &≡ λaλbλx.x \ a \ b\\
+\mathrm{fst} &≡ λxλy.x\\
+\mathrm{snd} &≡ λxλy.y
+\end{align*}
+However, the correspondence between the rules associated with ∧ and pairs is clearer in this way.
+
+\section{System F}
+In the previous section, we have described the basic correspondence between proofs and types. To this effect, we habe utilized only a few logical operators. One might naturally be curious about what happens when we attempt to introduce back some of the unconsidered operators. We will start with the ∀ quantifier, as this is perhaps the easiest one.
+\paragraph{}
+
+\end{document}
