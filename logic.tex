@@ -43,6 +43,7 @@ $$
 \infer[\mathrm{⇒E}]{B}{A & A → B}
 $$
 \subsection{Simply typed λ calculus}
+\label{simply}
 The definition of the calculus's terms is inductive:
 \begin{itemize}
     \item A variable $x:T$ is a term of type T,
@@ -52,11 +53,8 @@ The definition of the calculus's terms is inductive:
     \item If $t:T$ is a term, then $λx:U.t$ is a term of type U → V (abstraction),
     \item If $u:(V → T)$ and $v:V$ are terms, then $(u \ v):T$ is a term (application).
 \end{itemize}
-\paragraph{Evaluation}
-Evaluation can be understood as simple rewriting of terms, according to these equations:
-\[(λx:U.t) \ u → t[x:=u] \qquad π₁ \ ⟨u,v⟩ → u \qquad π₂ \ ⟨u,v⟩ → v\]
 \subsection{The correspondence}
-This can be observed between proof trees of natural deduction and types of terms constructed inside the calculus.
+This can be observed between proof trees of natural deduction and types of terms constructed inside the calculus:
 \begin{itemize}
     \item $\mathrm{∧I}$ corresponds to the creation of pairs,
     \item $\mathrm{∧₁E}$ to first projection,
@@ -64,6 +62,10 @@ This can be observed between proof trees of natural deduction and types of terms
     \item $\mathrm{⇒I}$ to abstraction,
     \item $\mathrm{⇒E}$ to application.
 \end{itemize}
+\subsection{Evaluation}
+Evaluation can be understood as simple rewriting of terms, according to these equations:
+\[(λx:U.t) \ u → t[x:=u] \qquad π₁ \ ⟨u,v⟩ → u \qquad π₂ \ ⟨u,v⟩ → v\]
+The first rule is known as β-reduction. From the logical point of view, this corresponds to the normalization of proofs.
 \subsection{Pairs in the Simply typed λ calculus}
 \label{crappairs}
 It should be noted that, from the calculus's point of view, it isn't necessary to explicitly define pairs as we have done above. Pairs can be easily defined from within the calculus:
@@ -74,28 +76,47 @@ It should be noted that, from the calculus's point of view, it isn't necessary t
 \end{align*}
 However, such a construct would only work for pairs of a single type (here the atomic type of natural numbers, ℕ). In addition, the correspondence between the rules associated with ∧ and pairs is clearer in this way.
 
-\section{System F}
+\section{Polymorphic λ calculus}
 In the previous section, we have described the basic correspondence between proofs and types. To this effect, we have utilized only a few logical operators. One might naturally be curious about what happens when we attempt to introduce back some of the unconsidered operators. We will start with the ∀ quantifier, as this is perhaps the easiest one.
+\iffalse{}
+\subsection{The role of ∀ in λ→}
+Here I wish to argue that the λ→ calculus already implicitly contains rules corresponding to ∀ of First-order logic. When the calculus was described in~\ref{simply}, not much attention was paid to the occasional necessity of renaming variables. Suppose we are to evaluate the following term in λ→:
+\[(λy:(A → A)λx:A.y \ x) \ (λx:A.x)\]
+What happens, if we don't pay attention to the names of variables, is that the above will immediately evaluate to
+\[λx:A.(λx:A.x) \ x,\]
+and here we are in trouble, because we don't know anymore which variable $x$ corresponds to which abstraction\footnote{We can, of course, define that each variable binds to it's nearest abstraction. However, this makes scope resolution more difficult}. Instead, before we perform function application, we must rename variables appropriately, obtaining e.g.
+\[λx:A.(λx':A.x') \ x\]
+This renaming of variables is known as α-conversion. The precise definition can be stated in this way: $λx:U.t$ is a term, then $λσ:U.t[x:=σ]$ is a term that is α-equivelant with the original, provided that $σ$ is free in $t$.
+\paragraph{}
+The rules for the ∀ quanifier in Natural deduction are
+$$
+\infer[\mathrm{∀I}]{∀x.A}{A}
+\qquad
+\infer[\mathrm{∀E}]{A[x:=t]}{∀x.A}
+$$
+The first rule $\mathrm{∀I}$ demands that $x$ occurs unbounded in $A$. Intuitively, the first rule states that if we have a formula in Natural deduction containing the unbounded variable $x$, then that formula's truthfulness is preserved for any choice of $x$. The second rule then permits us to substitute any element of the universe back into the formula.
+\fi
 \subsection{∀ fragment of Second-order logic}
-Introducing the ∀ quantifier would bring us into a fragment of First-order logic. However, we will go further than this — we will allow quantifying not only over variables, but also over sets. The rationale for this is that on the computational side, quantifying over variables makes little sense. What would it mean to say that $λx:ℕ.x$ is the identity function for all $x$ (of type ℕ)?
+Now let us go further than this — we will allow quantifying not only over variables, but also over sets. Sets in our case simply mean types (recall that type was generally understood as a set of objects).
 \paragraph{Introduction and elimination rules}
 $$
 \infer[\mathrm{∀I}]{∀X.A}{A}
 \qquad
 \infer[\mathrm{∀E}]{A[X:=t]}{∀X.A}
 $$
-In the case of the $\mathrm{∀I}$ rule, it is necessary to ensure that the variable $X$ is not free in $A$.
+In the case of the $\mathrm{∀I}$ rule it is necessary to ensure that the variable $X$ occurs unbounded in $A$.
 \subsection{Back to the calculus}
-On the computational side, this gives us abstraction over types, written Λ. We can therefore extend the definition of Simply typed λ calculus thus:
+On the computational side, this gives us abstraction over types. We can therefore extend the definition of λ→ thusly:
 \begin{itemize}
-    \item If $t:T$ is a term and X is not free in T, then $Λt:(∀X.T)$ is a term (universal abstraction),
+    \item If $t:T$ is a term and X is not free in T, then $ΛXt:(∀X.T)$ is a term (universal abstraction),
     \item If $u:(∀X.U)$ is a term and $V$ is a type, then $(u \ V):U[X:=V]$ is a term (universal application).
 \end{itemize}
+This is also known as Girard's System F. We will use the notation λ2 to refer to it.
 \paragraph{Evaluation}
-While we will soon see that we can drop the evaluation rules for pairs, however we need a new rule for universal abstraction and application:
+While we will soon see that we can drop all the rules for pairs, we need a new rule for universal abstraction and application:
 \[(∀X.T) \ U → T[X:=U]\]
 \paragraph{Example}
-We can use this to generalize our example with pairs from~\ref{crappairs}:
+We can use this to generalize our example with pairs from~\ref{crappairs}, allowing us to abandon our rules for pairs from λ→ completely:
 \begin{align*}
     \mathrm{pair} &≡ λx:Uλy:VΛZλz:(U → V → Z).x \ a \ b\\
     \mathrm{fst} \ t &≡ t \ U \ (λx:Uλy:V.x)\\
