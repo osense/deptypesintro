@@ -26,6 +26,13 @@ ABSTRACT
 Into…
 
 
+\section{Definitions}
+\textbf{Type} can generally be understood as a set of objects that inhabit it (e.g.\ the type ℕ of all natural numbers, including zero).
+
+To say that some variable is \textbf{free} in an object (e.g.\ a type or a formula) means that it does not occur anywhere in the given object (e.g.\ $A$ is free in $B$ or $B → B$, but not in $A → B → B$).
+
+\textbf{$\mathcal{L} (\mathcal{M})$} denotes the language of some calculus \mathcal{M}, that is, all the terms that can be constructed from some fixed starting set of variables.
+
 \section{Simply typed lambda calculus}
 In this section we will remind the reader of the well-known correspondence between Natural deduction and the Simply typed λ calculus. We won't go into much detail, as this is covered well in other literature (e.g.~\cite{??}).
 
@@ -37,7 +44,7 @@ Natural deduction is a proof calculus which can be used in both Classical and In
 $$
 \infer[\mathrm{∧I}]{A ∧ B}{A & B}
 \qquad
-\infer[\mathrm{⇒I}]{A → B}{\infer*{B}{[A]}}
+\infer[\mathrm{⇒I}]{A ⇒ B}{\infer*{B}{[A]}}
 $$
 \paragraph{Elimination rules}
 $$
@@ -45,25 +52,25 @@ $$
 \qquad
 \infer[\mathrm{∧₂E}]{B}{A ∧ B}
 \qquad
-\infer[\mathrm{⇒E}]{B}{A & A → B}
+\infer[\mathrm{⇒E}]{B}{A & A ⇒ B}
 $$
 
 \subsection{Simply typed λ calculus}
 \label{simply}
 We can immediately observe the correspondence between types and proofs:
 \begin{itemize}
-    \item A variable $x:T$ is a term of the atomic type T, \hfill (hypothesis)
-    \item If $u:U$ and $v:V$ are terms, then $⟨u,v⟩:(U × V)$ is a term, \hfill ($\mathrm{∧I}$)
-    \item If $t:(U × V)$ is a term, then $(π₁ \ t):U$ is a term, \hfill ($\mathrm{∧₁E}$)
-    \item If $t:(U × V)$ is a term, then $(π₂ \ t):V$ is a term, \hfill ($\mathrm{∧₂E}$)
-    \item If $t:T$ is a term, then $λx:U.t$ is a term of type U → V, \hfill ($\mathrm{⇒I}$)
-    \item If $u:(V → T)$ and $v:V$ are terms, then $(u \ v):T$ is a term. \hfill ($\mathrm{⇒E}$)
+    \item A variable $x$ is a term of some atomic type T, \hfill (hypothesis)
+    \item If $u$ and $v$ are terms of type $U$ and $V$ respectively, then $⟨u,v⟩$ is a term of type $U × V$, \hfill ($\mathrm{∧I}$)
+    \item If $t$ is a term of type $U × V$, then $π₁ \ t$ is a term of type $U$, \hfill ($\mathrm{∧₁E}$)
+    \item If $t$ is a term of type $U × V$, then $π₂ \ t$ is a term of type $V$, \hfill ($\mathrm{∧₁E}$)
+    \item If $t$ is a term of type $T$, then $λx:U.t$ is a term of type $U → V$, \hfill ($\mathrm{⇒I}$)
+    \item If $u$ and $v$ are terms of type $V → T$ and $v$ respectively, then $u \ v$ is a term of type $T$. \hfill ($\mathrm{⇒E}$)
 \end{itemize}
 
 \subsection{Evaluation}
 Evaluation can be understood as simple rewriting of terms, according to these equations:
 \[(λx:U.t) \ u → t[x:=u] \qquad π₁ \ ⟨u,v⟩ → u \qquad π₂ \ ⟨u,v⟩ → v\]
-The first rule is known as β-reduction. From the logical point of view, this corresponds to normalization of proofs.
+The first rule is known as β-reduction. From the logical point of view, these rules correspond to the normalization of proofs.
 
 \subsection{Pairs in the Simply typed λ calculus}
 \label{crappairs}
@@ -73,7 +80,7 @@ It should be noted that, from the calculus's point of view, it isn't necessary t
     \mathrm{fst} \ t &≡ t \ (λx:ℕλy:ℕ.x)\\
     \mathrm{snd} \ t &≡ t \ (λx:ℕλy:ℕ.y)
 \end{align*}
-However, such a construct would only work for pairs of a single type (here the atomic type of natural numbers, ℕ). In addition, the correspondence between the rules associated with ∧ and pairs is clearer in this way.
+However, such a construct would only work for pairs of a single type (here the atomic type of natural numbers, ℕ).
 
 
 \section{Polymorphic λ calculus}
@@ -90,12 +97,12 @@ $$
 In the case of the $\mathrm{∀I}$ rule it is necessary to ensure that the variable $X$ occurs unbounded in $A$.
 
 \subsection{Back to the calculus}
-Intuitivelly, the first rule from the previous section says that once we have a valid term $t:T$ (e.g. $λx:ℕ.x$ of type $ℕ → ℕ$), we can generalize over some atomic type present in $T$ (in our example, the only option is to generalize over $ℕ$, obtaining $Λαλx:α.x$ of type $∀α.α → α$, the polymorphic identity function). The second rule comes into play during evaluation: it allows us to instantiate the function back into some specific type. Typically, greek lower case letters are used to denote abstracted types.
-\paragraph{}
+Intuitivelly, the first rule from the previous section says that once we have a valid term $t:T$ (e.g. $λx:ℕ.x$ of type $ℕ → ℕ$), we can generalize over some atomic type present in $T$ (in our example, the only option is to generalize over $ℕ$, obtaining $Λαλx:α.x$ of type $∀α.α → α$, the polymorphic identity function). The second rule comes into play during evaluation: it allows us to instantiate the function back into some specific type. Typically, greek lower case letters are used to denote types over which we have abstracted.
+
 We can therefore extend the definition of λ→ thusly:
 \begin{itemize}
-    \item If $t:T$ is a term and X is not free in T, then $Λαt:(∀α.T)$ is a term (universal abstraction),
-    \item If $u:(∀α.U)$ is a term and $V$ is a type, then $(u \ V):U[α:=V]$ is a term (universal application).
+    \item If $t$ is a term of type $T$ and X is not free in $T$, then $Λαt$ is a term of type $∀α.T$ (universal abstraction),
+    \item If $u$ is a term of type $∀α.U$ and $V$ is some type, then $u \ V$ is a term of type $U[α:=V]$ (universal application).
 \end{itemize}
 This system is also known as Girard's System F. We will use the notation λ2 to refer to it. Note that $\mathcal{L}(λ→) ⊂ \mathcal{L}(λ2)$.
 \paragraph{Evaluation}
