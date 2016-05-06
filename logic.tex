@@ -1,10 +1,14 @@
 \documentclass[12pt]{article}
 \usepackage[mathletters]{ucs}
 \usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
 \usepackage{proof}
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{latexsym}
 
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
 
 \title{Correspondece between Second-order logic and~Polymorphic lambda calculus}
 \author{Adam Krupicka\\
@@ -27,9 +31,8 @@ Into…
 
 
 \section{Definitions}
-\textbf{Type} can generally be understood as a set of objects that inhabit it (e.g.\ the type ℕ of all natural numbers, including zero).
 
-To say that some variable is \textbf{free} in an object (e.g.\ a type or a formula) means that it does not occur anywhere in the given object (e.g.\ $A$ is free in $B$ or $B → B$, but not in $A → B → B$).
+To say that some variable is \textbf{free} in a type means that it does not occur anywhere in it (e.g.\ $A$ is free in $B$ or $B → B$, but not in $A → B → B$).
 
 \textbf{$\mathcal{L} (\mathcal{M})$} denotes the language of some calculus \mathcal{M}, that is, all the terms that can be constructed from some fixed starting set of variables.
 
@@ -57,6 +60,9 @@ $$
 
 \subsection{Simply typed λ calculus}
 \label{simply}
+\begin{definition}
+    Type is a set of objects that are said to inhabit it, e.g.\ the type $ℕ$ of all natural numbers, including zero.
+\end{definition}
 We can immediately observe the correspondence between types and proofs:
 \begin{itemize}
     \item A variable $x$ is a term of some atomic type T, \hfill (hypothesis)
@@ -64,7 +70,7 @@ We can immediately observe the correspondence between types and proofs:
     \item If $t$ is a term of type $U × V$, then $π₁ \ t$ is a term of type $U$, \hfill ($\mathrm{∧₁E}$)
     \item If $t$ is a term of type $U × V$, then $π₂ \ t$ is a term of type $V$, \hfill ($\mathrm{∧₁E}$)
     \item If $t$ is a term of type $T$, then $λx:U.t$ is a term of type $U → V$, \hfill ($\mathrm{⇒I}$)
-    \item If $u$ and $v$ are terms of type $V → T$ and $v$ respectively, then $u \ v$ is a term of type $T$. \hfill ($\mathrm{⇒E}$)
+    \item If $u$ and $v$ are terms of type $U$ and $U → V$ respectively, then $u \ v$ is a term of type $V$. \hfill ($\mathrm{⇒E}$)
 \end{itemize}
 
 \subsection{Evaluation}
@@ -83,11 +89,11 @@ It should be noted that, from the calculus's point of view, it isn't necessary t
 However, such a construct would only work for pairs of a single type (here the atomic type of natural numbers, ℕ).
 
 
-\section{Polymorphic λ calculus}
+\section{Universal quantification}
 In the previous section, we have described the basic correspondence between proofs and types. To this effect, we have utilized only a few logical operators. One might naturally be curious about what happens when we attempt to introduce back some of the unconsidered operators. We will start with the ∀ quantifier, as this is perhaps the easiest one.
 
-\subsection{∀ fragment of Second-order propositional logic}
-Now let us go further than this — we will allow quantifying not only over variables, but also over sets. Sets in our case simply mean types (recall that type was generally understood as a set of objects).
+\subsection{Second-order propositional logic}
+Quantifying on the order of variables would require us to introduce some concept of variables into our Natural deduction calculus; it seems that it would take us in some more complex direction. Instead, we can allow quantification over propositions. This seems more natural, as we have already observed that propositions correspond to types. The new rules for Natural deduction therefore are:
 \paragraph{Introduction and elimination rules}
 $$
 \infer[\mathrm{∀I}]{∀X.A}{A}
@@ -96,19 +102,21 @@ $$
 $$
 In the case of the $\mathrm{∀I}$ rule it is necessary to ensure that the variable $X$ occurs unbounded in $A$.
 
-\subsection{Back to the calculus}
-Intuitivelly, the first rule from the previous section says that once we have a valid term $t:T$ (e.g. $λx:ℕ.x$ of type $ℕ → ℕ$), we can generalize over some atomic type present in $T$ (in our example, the only option is to generalize over $ℕ$, obtaining $Λαλx:α.x$ of type $∀α.α → α$, the polymorphic identity function). The second rule comes into play during evaluation: it allows us to instantiate the function back into some specific type. Typically, greek lower case letters are used to denote types over which we have abstracted.
+\subsection{Polymorphic λ calculus}
+Intuitively, the first rule from the previous section can be seen as saying that once we have a valid term $t:T$ (e.g. $λx:ℕ.x$ of type $ℕ → ℕ$), we can generalize over some atomic type present in $T$ (in our example, the only option is to generalize over $ℕ$, obtaining $Λαλx:α.x$ of type $∀α.α → α$, the polymorphic identity function). The second rule comes into play during evaluation: it allows us to instantiate the function back into some specific type. Typically, Greek lower case letters are used to denote types over which we have abstracted.
 
 We can therefore extend the definition of λ→ thusly:
 \begin{itemize}
-    \item If $t$ is a term of type $T$ and X is not free in $T$, then $Λαt$ is a term of type $∀α.T$ (universal abstraction),
+    \item If $t$ is a term of type $T$ and α is not free in $T$, then $Λα.t$ is a term of type $∀α.T$ (universal abstraction),
     \item If $u$ is a term of type $∀α.U$ and $V$ is some type, then $u \ V$ is a term of type $U[α:=V]$ (universal application).
 \end{itemize}
-This system is also known as Girard's System F. We will use the notation λ2 to refer to it. Note that $\mathcal{L}(λ→) ⊂ \mathcal{L}(λ2)$.
+This system is also known as Girard's System F. We will use the notation λ2 to refer to it.
 \paragraph{Evaluation}
 While we will soon see that we can drop all the rules for pairs, we need a new rule for universal application:
 \[(∀α.T) \ U → T[α:=U]\]
-\paragraph{Example}
+
+\subsection{Pairs in λ2}
+\label{pairs}
 We can use this to generalize our example with pairs from~\ref{crappairs}, allowing us to abandon the explicit rules for pairs from λ→ completely:
 \begin{align*}
     \mathrm{pair} &≡ λx:αλy:βΛγλz:(α → β → γ).x \ a \ b\\
@@ -124,4 +132,15 @@ Let us evaluate an example term:
     \leadsto& \ (λx:αλy:β.x) \ p₁ \ p₂\\
     \leadsto& \ p₁\\
 \end{align*}
+
+\begin{theorem}
+    $\mathcal{L}(λ→) ⊂ \mathcal{L}(λ2)$
+\end{theorem}
+\noindent\textit{Proof.}
+\begin{itemize}
+    \item $\mathcal{L}(λ→) ⊆ \mathcal{L}(λ2)$: With the exception of pairs, we have retained all rules already present in λ→. We have showed how to create pairs inside λ2 in~\ref{pairs}
+    \item $\mathcal{L}(λ→) ≠ \mathcal{L}(λ2)$: $Λα.t ∈ \mathcal{L}(λ2)$, however $Λα.t ∉ \mathcal{L}(λ→)$ for any term $t$ of type $T$ where α is not free on $T$.
+\end{itemize}
+
+
 \end{document}
