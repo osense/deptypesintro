@@ -9,8 +9,10 @@
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
+\newcommand{\true}{\enskip\mathrm{true}}
+\newcommand{\term}{\enskip\mathrm{term}}
 
-\title{Correspondece between Second-order logic and~Polymorphic lambda calculus}
+\title{Dependent types}
 \author{Adam Krupicka\\
         Faculty of Informatics\\
         Masaryk University, Brno
@@ -27,7 +29,7 @@ ABSTRACT
 
 
 \section{Introduction}
-Into…
+…
 
 
 \section{Definitions}
@@ -36,111 +38,49 @@ To say that some variable is \textbf{free} in a type means that it does not occu
 
 \textbf{$\mathcal{L} (\mathcal{M})$} denotes the language of some calculus \mathcal{M}, that is, all the terms that can be constructed from some fixed starting set of variables.
 
-\section{Simply typed lambda calculus}
-In this section we will remind the reader of the well-known correspondence between Natural deduction and the Simply typed λ calculus. We won't go into much detail, as this is covered well in other literature (e.g.~\cite{??}).
+\section{First-order predicate logic}
+
 
 \subsection{Natural deduction}
-Natural deduction is a proof calculus which can be used in both Classical and Intuitionistic logic. Consider a fragment of Natural deduction under the latter interpretation, consisting only of conjunction and implication.
+We will consider a fragment consisting only of implication and the quantifiers. Why this is sufficient will become clear in the next section.
 \paragraph{Hypothesis}
 \[A\]
-\paragraph{Introduction rules}
+\paragraph{Implication}
 $$
-\infer[\mathrm{∧I}]{A ∧ B}{A & B}
+\infer[\mathrm{⇒I^u}]{A ⇒ B \true}{\infer*{B \true}{\infer[u]{A \true}}}
 \qquad
-\infer[\mathrm{⇒I}]{A ⇒ B}{\infer*{B}{[A]}}
+\infer[\mathrm{⇒E}]{B \true}{A \true & A ⇒ B \true}
 $$
-\paragraph{Elimination rules}
+The introduction rule on the left states that assuming some initial hypothesis $A$, if we then proceed to show $B$, then $A ⇒ B$ holds, however we must remember to discharge our initial hypothesis of $A$. It can be thought of as taking the entire derivation tree of $B$ from the hypothetical $A$ and stating it more succinctly as $A ⇒ B$.
+
+The elimination rule on the right should be obvious.
+\paragraph{Universal quantification}
 $$
-\infer[\mathrm{∧₁E}]{A}{A ∧ B}
+\infer[\mathrm{∀I^u}]{∀x.A \true}{\infer*{A[x:=t] \true}{\infer[u]{t \term}}}
 \qquad
-\infer[\mathrm{∧₂E}]{B}{A ∧ B}
+\infer[\mathrm{∀E}]{A[x:=t] \true}{∀x.A \true & t \term}
+$$
+The introduction rule is easier to read bottom to top: if we wish to conclude $∀x.A$, then we are required to show that if we replace every instance of $x$ in $A$ with some arbitrary term $t$, $A$ still holds. The term $t$ can be thought of as a variable, because we are not allowed to assume anything about it — it is just some $t$.
+
+The rule on the right is, again, rather obvious — it allows us to specialize a universally qualified formula back into some term.
+\paragraph{Existential quantification}
+$$
+\infer[\mathrm{∃I^u}]{∃x.A[t:=x] \true}{A \true}
 \qquad
-\infer[\mathrm{⇒E}]{B}{A & A ⇒ B}
+\infer[\mathrm{∃E^{u,v}}]{B \true}{∃x.A \true & \infer*{B \true}{\infer[v]{A[x:=t] \true}{\infer*{}{\infer[u]{t \term}}}}}
 $$
+Here, the introduction rule simply states that if we have a proposition $A$ containing some term $t$ which happens to be true, then we can abstract away from the specific $t$ and simply conclude the existence of some $x$ where $A$ (undergoing the replacement $t:=x$) is true.
 
-\subsection{Simply typed λ calculus}
-\label{simply}
-\begin{definition}
-    Type is a set of objects that are said to inhabit it, e.g.\ the type $ℕ$ of all natural numbers, including zero.
-\end{definition}
-We can immediately observe the correspondence between types and proofs:
-\begin{itemize}
-    \item A variable $x$ is a term of some atomic type T, \hfill (hypothesis)
-    \item If $u$ and $v$ are terms of type $U$ and $V$ respectively, then $⟨u,v⟩$ is a term of type $U × V$, \hfill ($\mathrm{∧I}$)
-    \item If $t$ is a term of type $U × V$, then $π₁ \ t$ is a term of type $U$, \hfill ($\mathrm{∧₁E}$)
-    \item If $t$ is a term of type $U × V$, then $π₂ \ t$ is a term of type $V$, \hfill ($\mathrm{∧₁E}$)
-    \item If $t$ is a term of type $T$, then $λx:U.t$ is a term of type $U → V$, \hfill ($\mathrm{⇒I}$)
-    \item If $u$ and $v$ are terms of type $U$ and $U → V$ respectively, then $u \ v$ is a term of type $V$. \hfill ($\mathrm{⇒E}$)
-\end{itemize}
-
-\subsection{Evaluation}
-Evaluation can be understood as simple rewriting of terms, according to these equations:
-\[(λx:U.t) \ u → t[x:=u] \qquad π₁ \ ⟨u,v⟩ → u \qquad π₂ \ ⟨u,v⟩ → v\]
-The first rule is known as β-reduction. From the logical point of view, these rules correspond to the normalization of proofs.
-
-\subsection{Pairs in the Simply typed λ calculus}
-\label{crappairs}
-It should be noted that, from the calculus's point of view, it isn't necessary to explicitly define pairs as we have done above. Pairs can be easily defined from within the calculus:
-\begin{align*}
-    \mathrm{pair} &≡ λa:ℕλb:ℕλx:(ℕ → ℕ → ℕ).x \ a \ b\\
-    \mathrm{fst} \ t &≡ t \ (λx:ℕλy:ℕ.x)\\
-    \mathrm{snd} \ t &≡ t \ (λx:ℕλy:ℕ.y)
-\end{align*}
-However, such a construct would only work for pairs of a single type (here the atomic type of natural numbers, ℕ).
+The elimination rule says that if, having a proof of $∃x.A$, we can construct a proof of $A$ (modulo replacement) with some arbitrary term $t$ (which is really just a variable), and furthermore we then proceed to show that $B$ follows from $A$, we can conclude $B$.
 
 
-\section{Universal quantification}
-In the previous section, we have described the basic correspondence between proofs and types. To this effect, we have utilized only a few logical operators. One might naturally be curious about what happens when we attempt to introduce back some of the unconsidered operators. We will start with the ∀ quantifier, as this is perhaps the easiest one.
+\section{Dependent types}
 
-\subsection{Second-order propositional logic}
-Quantifying on the order of variables would require us to introduce some concept of variables into our Natural deduction calculus; it seems that it would take us in some more complex direction. Instead, we can allow quantification over propositions. This seems more natural, as we have already observed that propositions correspond to types. The new rules for Natural deduction therefore are:
-\paragraph{Introduction and elimination rules}
-$$
-\infer[\mathrm{∀I}]{∀X.A}{A}
-\qquad
-\infer[\mathrm{∀E}]{A[X:=t]}{∀X.A}
-$$
-In the case of the $\mathrm{∀I}$ rule it is necessary to ensure that the variable $X$ occurs unbounded in $A$.
 
-\subsection{Polymorphic λ calculus}
-Intuitively, the first rule from the previous section can be seen as saying that once we have a valid term $t:T$ (e.g. $λx:ℕ.x$ of type $ℕ → ℕ$), we can generalize over some atomic type present in $T$ (in our example, the only option is to generalize over $ℕ$, obtaining $Λαλx:α.x$ of type $∀α.α → α$, the polymorphic identity function). The second rule comes into play during evaluation: it allows us to instantiate the function back into some specific type. Typically, Greek lower case letters are used to denote types over which we have abstracted.
+\section{The Curry-Howard correspondence}
 
-We can therefore extend the definition of λ→ thusly:
-\begin{itemize}
-    \item If $t$ is a term of type $T$ and α is not free in $T$, then $Λα.t$ is a term of type $∀α.T$ (universal abstraction),
-    \item If $u$ is a term of type $∀α.U$ and $V$ is some type, then $u \ V$ is a term of type $U[α:=V]$ (universal application).
-\end{itemize}
-This system is also known as Girard's System F. We will use the notation λ2 to refer to it.
-\paragraph{Evaluation}
-While we will soon see that we can drop all the rules for pairs, we need a new rule for universal application:
-\[(∀α.T) \ U → T[α:=U]\]
 
-\subsection{Pairs in λ2}
-\label{pairs}
-We can use this to generalize our example with pairs from~\ref{crappairs}, allowing us to abandon the explicit rules for pairs from λ→ completely:
-\begin{align*}
-    \mathrm{pair} &≡ λx:αλy:βΛγλz:(α → β → γ).x \ a \ b\\
-    \mathrm{fst} \ t &≡ t \ α \ (λx:αλy:β.x)\\
-    \mathrm{snd} \ t &≡ t \ β \ (λx:αλy:β.y)
-\end{align*}
-Let us evaluate an example term:
-\begin{align*}
-    \mathrm{fst} \ (\mathrm{pair} \ p₁ \ p₂) =& \ \mathrm{fst} \ (λa:αλb:βΛγλx:(α → β → γ).x \ a \ b) \ p₁ \ p₂\\
-    \leadsto& \ \mathrm{fst} \ (Λγλx:(α → β → γ).x \ p₁ \ p₂)\\
-    =& \ (Λγλx:(α → β → γ).x \ p₁ \ p₂) \ α \ (λx:αλy:β.x)\\
-    \leadsto& \ (λx:(α → β → α).x \ p₁ \ p₂) \ (λx:αλy:β.x)\\
-    \leadsto& \ (λx:αλy:β.x) \ p₁ \ p₂\\
-    \leadsto& \ p₁\\
-\end{align*}
-
-\begin{theorem}
-    $\mathcal{L}(λ→) ⊂ \mathcal{L}(λ2)$
-\end{theorem}
-\noindent\textit{Proof.}
-\begin{itemize}
-    \item $\mathcal{L}(λ→) ⊆ \mathcal{L}(λ2)$: With the exception of pairs, we have retained all rules already present in λ→. We have showed how to create pairs inside λ2 in~\ref{pairs}
-    \item $\mathcal{L}(λ→) ≠ \mathcal{L}(λ2)$: $Λα.t ∈ \mathcal{L}(λ2)$, however $Λα.t ∉ \mathcal{L}(λ→)$ for any term $t$ of type $T$ where α is not free on $T$.
-\end{itemize}
+\section{Dependent types in practice}
 
 
 \end{document}
