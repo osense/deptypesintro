@@ -8,7 +8,12 @@
 \usepackage{amsthm}
 \usepackage{latexsym}
 \usepackage{tikz-cd}
-\usepackage{agda}
+
+\usepackage{graphicx}
+\graphicspath{{images/}}
+
+\usepackage{verbatim}
+\newenvironment{code}{\verbatim}{\endverbatim}
 
 \usepackage[backend=bibtex]{biblatex}
 \bibliography{citations}
@@ -99,21 +104,163 @@ When we further allow the binders to range over higher types, we obtain the syst
 
 
 \section{Dependent types in practice}
-In this section, I have included a practical demonstration of dependent types. We will use a practical proof assistant/programming language based on dependent type theory called Agda~\cite{norell2007towards}.
+In this section, I have included a practical demonstration of dependent types. We will use a proof assistant/programming language based on dependent type theory called Agda~\cite{norell2007towards}.
 
-\begin{code}
+\subsection{Vectors}
+We have already seen that dependent types make it possible to define vectors of fixed lenght. To encode vectors in Agda, we will first have to define natural numbers.
+\begin{verbatim}
+    data ℕ : Set where
+      zero : ℕ 
+      succ : ℕ → ℕ
+\end{verbatim}
+This is a data type declaration with two constructors. The first, nullary constructor simply represents zero. The second, unary constructor represent the successor function. For example to encode the number 4, we would write \verb|succ(succ(succ(succ(zero))))|.
+
+Equipped with Peano numbers, we can now define the type of vectors.
+\begin{verbatim}
+    data Vec (A : Set) : ℕ → Set where
+      []   : Vec A zero
+      _::_ : {n : ℕ} → A →  Vec A n → Vec A (succ n)
+\end{verbatim}
+Here again we have two constructors. The first constructor simply represents an empty vector (of any type). The second constructor prepends a value to the head of a vector. For example, the vector $[1, 2, 3]$ would be represented as \verb|1 :: (2 :: (3 :: []))|.
+
+Compared to regular lists of any length, the immediate improvement is that now we can define our \verb|head| and \verb|tail| functions in a manner which enfrorces these to be only applied to non-empty vectors.
+\begin{verbatim}
+    head : ∀ {n A} → Vec A (succ n) → A 
+    head (x :: _) = x 
+
+    tail : ∀ {n A} → Vec A (succ n) → Vec A n 
+    tail (_ :: xs) = xs
+\end{verbatim}
+Note that the length of the input vector is \verb|succ n|. This enforces the programmer to always pass to the function an input vector of length at least $1$, otherwise the code will not pass type checking.
+
+\paragraph{}
+We can define addition and multiplication on Peano numbers recursively.
+\begin{verbatim}
+    _+_ : ℕ → ℕ → ℕ
+    zero + b = b
+    (succ a) + b = succ (a + b)
+
+    _*_ : ℕ → ℕ → ℕ
+    zero * b = zero
+    (succ a) * b = b + (a * b)
+\end{verbatim}
+With these operations, we can now express more advanced functions on vectors.
+\begin{verbatim}
+    append : ∀ {n m A} → Vec A n → Vec A m → Vec A (n + m)
+    append [] ys = ys
+    append (x :: xs) ys = x :: append xs ys
+
+    concat : ∀ {n m A} → Vec (Vec A m) n → Vec A (n * m)
+    concat [] = []
+    concat (xs :: xss) = append xs (concat xss)
+\end{verbatim}
+\verb|append| simply appends two vectors, whereas \verb|concat| concatenates a vector of vectors into a single vector. Note that each vector is of the same, fixed length $m$ inside the outer vector of length $n$. This is a natural way to encode matrices. As an example of a matrix function, we might want to extract the diagonal of a matrix. However, the matrix must be square! This is easy to express on the type level.
+\begin{verbatim}
+    map : ∀ {n A B} → Vec (A → B) n → Vec A n → Vec B n
+    map [] [] = []
+    map (f :: fs) (x :: xs) = (f x) :: (map fs xs)
+
+    diagonal : ∀ {n A} → Vec (Vec A n) n → Vec A n
+    diagonal [] = []
+    diagonal (xs :: xss) = head xs :: diagonal (map tail xss)
+\end{verbatim}
+
+\subsection{Natural deduction}
+In the previous subsection, we have seen a few examples of how dependent types can help us be more expressive about our computations. In this subsection, we will look at another application of dependent types — theorem proving. Following the Curry–Howard Isomorphism, this should come as no surprise. Dependent types are very expressive, which is why they are fitting for the task. Now, let us prove some basic properties of Natural Deduction.
+
+\paragraph{Conjunction}
+Our system will closely model the rules of Natural Deduction. We will define introduction as a data type constructor, and eleminations as functions.
+\begin{verbatim}
     data _∧_ (P : Set) (Q : Set) : Set where
-    ∧-int : P → Q → (P ∧ Q)
+      ∧-int : P → Q → (P ∧ Q)
 
-    ∧-elim₁ : {P Q : Set} → (P ∧ Q) → P
-    ∧-elim₁ (∧-int p q) = p
+    ∧-elim₁ : {P Q : Set} → (P ∧ Q) → P 
+    ∧-elim₁ (∧-int p q) = p 
 
-    ∧-elim₂ : {P Q : Set} → (P ∧ Q) → Q
+    ∧-elim₂ : {P Q : Set} → (P ∧ Q) → Q 
     ∧-elim₂ (∧-int p q) = q
-
+\end{verbatim}
+We can prove some basic properties of conjunction, e.g.~commutativity. With the help of pattern matching, we will simply deconstruct the proof of $p ∧ q$ into proofs of $p$ and $q$, and then arrange them back into a conjunction in the required order.
+\begin{verbatim}
     ∧-comm' : {P Q : Set} → (P ∧ Q) → (Q ∧ P)
     ∧-comm' (∧-int p q) = ∧-int q p
-\end{code}
+\end{verbatim}
+Note that, strictly speaking, we have only proved one direction of the equivalence. In this simple case this makes no difference, as both directions are analogous, however in more complex proofs we would wish to prove both directions. We will therefore define equivalence on a meta-level (not inside our Natural Deduction system) and restate the commutativity proof.
+\begin{verbatim}
+    _⇔_ : (P : Set) → (Q : Set) → Set
+    p ⇔ q = (p → q) ∧ (q → p)
+
+    ∧-comm : {P Q : Set} → (P ∧ Q) ⇔ (Q ∧ P)
+    ∧-comm = ∧-int ∧-comm' ∧-comm'
+\end{verbatim}
+The commutativity proof now reflects our intuitive understanding of it. Both implications are analogous, therefore we can simply reuse our original proof in both directions.
+
+Associativity can be proved in a very similar fashion. We can view the first two functions as lemmas, and the third function as a corrolary.
+\begin{verbatim}
+    ∧-assoc¹ : {P Q R : Set} → (P ∧ (Q ∧ R)) → ((P ∧ Q) ∧ R)
+    ∧-assoc¹ (∧-int p (∧-int q r)) = ∧-int (∧-int p q) r
+
+    ∧-assoc² : {P Q R : Set} → ((P ∧ Q) ∧ R) → (P ∧ (Q ∧ R))
+    ∧-assoc² (∧-int (∧-int p q) r) = ∧-int p (∧-int q r)
+
+    ∧-assoc : {P Q R : Set} → (P ∧ (Q ∧ R)) ⇔ ((P ∧ Q) ∧ R)
+    ∧-assoc = ∧-int ∧-assoc¹ ∧-assoc²
+\end{verbatim}
+
+\paragraph{Disjunction}
+We will now define disjunction. As in Natural Deduction, we will employ two introductions and one elimination.
+\begin{verbatim}
+    data _∨_ (P : Set) (Q : Set) : Set where
+      ∨-int₁ : P → (P ∨ Q)
+      ∨-int₂ : Q → (P ∨ Q)
+
+    ∨-elim : {P Q R : Set} → (P → R) → (Q → R) → (P ∨ Q) → R 
+    ∨-elim f _ (∨-int₁ p) = f p 
+    ∨-elim _ g (∨-int₂ q) = g q
+\end{verbatim}
+Once again, our functions closely model the rules of Natural Deduction. We will not concern ourselves with the proofs of commutativity and associativity, as they are similar to those of conjunction.
+
+Instead, we will present proofs of theorems of both our logical connectives combined\footnote{That is, identities valid in any Boolean algebra.}. A proof of absorption can be formalized thusly:
+\begin{verbatim}
+    abs₁ : {P Q : Set} → (P ∧ (P ∨ Q)) ⇔ P 
+    abs₁ = ∧-int ∧-elim₁
+                 (λ p → ∧-int p (∨-int₁ p))
+
+    id : {A : Set} → A → A
+    id x = x
+
+    abs₂ : {P Q : Set} → (P ∨ (P ∧ Q)) ⇔ P
+    abs₂ = ∧-int (∨-elim id ∧-elim₁)
+                 ∨-int₁
+\end{verbatim}
+One direction of the theorems is always trivial; the other has to be constructed appropriately. For this, we utilize a lambda expression in the first theorem, and we have to eliminate a disjunction in the second theorem — in this case, the identity function comes in handy.
+
+Finally, we shall prove the distributive laws. These are a bit more wordy, however they follow the same principles of simply reorganizing the formulas as we require.
+\begin{verbatim}
+    distrib₁¹ : {P Q R : Set} → (P ∧ (Q ∨ R)) → ((P ∧ Q) ∨ (P ∧ R))
+    distrib₁¹ (∧-int p (∨-int₁ q)) = ∨-int₁ (∧-int p q)
+    distrib₁¹ (∧-int p (∨-int₂ r)) = ∨-int₂ (∧-int p r)
+
+    distrib₁² : {P Q R : Set} → ((P ∧ Q) ∨ (P ∧ R)) → (P ∧ (Q ∨ R))
+    distrib₁² (∨-int₁ (∧-int p q)) = ∧-int p (∨-int₁ q)
+    distrib₁² (∨-int₂ (∧-int p r)) = ∧-int p (∨-int₂ r)
+
+    distrib₁ : {P Q R : Set} → (P ∧ (Q ∨ R)) ⇔ ((P ∧ Q) ∨ (P ∧ R))
+    distrib₁ = ∧-int distrib₁¹ distrib₁²
+
+
+    distrib₂¹ : {P Q R : Set} → (P ∨ (Q ∧ R)) → ((P ∨ Q) ∧ (P ∨ R))
+    distrib₂¹ (∨-int₁ p) = ∧-int (∨-int₁ p) (∨-int₁ p)
+    distrib₂¹ (∨-int₂ (∧-int q r)) = ∧-int (∨-int₂ q) (∨-int₂ r)
+
+    distrib₂² : {P Q R : Set} → ((P ∨ Q) ∧ (P ∨ R)) → (P ∨ (Q ∧ R))
+    distrib₂² (∧-int (∨-int₁ p) _) = ∨-int₁ p
+    distrib₂² (∧-int _ (∨-int₁ p)) = ∨-int₁ p
+    distrib₂² (∧-int (∨-int₂ q) (∨-int₂ r)) = ∨-int₂ (∧-int q r)
+
+    distrib₂ : {P Q R : Set} → (P ∨ (Q ∧ R)) ⇔ ((P ∨ Q) ∧ (P ∨ R))
+    distrib₂ = ∧-int distrib₂¹ distrib₂²
+\end{verbatim}
 
 \section{A note on decidability}
 
