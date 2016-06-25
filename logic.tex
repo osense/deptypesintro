@@ -8,6 +8,10 @@
 \usepackage{amsthm}
 \usepackage{latexsym}
 \usepackage{tikz-cd}
+\usepackage{agda}
+
+\usepackage[backend=bibtex]{biblatex}
+\bibliography{citations}
 
 \newtheorem{theorem}{Theorem}
 \newtheorem{definition}{Definition}
@@ -27,36 +31,16 @@
 \maketitle
 
 \begin{abstract}
-ABSTRACT
-\end{abstract}
-
+This short essay aims to give an intuitive overview of Dependent types, their correspondence with First-order predicate logic, and their practical uses.
+\end{abstract} 
 
 \section{Introduction}
-…
-
-
-\section{Definitions}
-
-To say that some variable is \textbf{free} in a type means that it does not occur anywhere in it (e.g.\ $A$ is free in $B$ or $B → B$, but not in $A → B → B$).
-
-\textbf{$\mathcal{L} (\mathcal{M})$} denotes the language of some calculus \mathcal{M}, that is, all the terms that can be constructed from some fixed starting set of variables.
+Some prior knowledge of the Curry-Howard isomorphism and related topics is assumed, such as outlined in e.g.~\cite{mcadams2013tutorial}.
 
 \section{First-order predicate logic}
 
 
 \subsection{Natural deduction}
-We will consider a fragment consisting only of implication and the quantifiers. Why this is sufficient will become clear in the next section.
-\paragraph{Hypothesis}
-\[A\]
-\paragraph{Implication}
-$$
-\infer[\mathrm{⇒I^u}]{A ⇒ B \true}{\infer*{B \true}{\infer[u]{A \true}}}
-\qquad
-\infer[\mathrm{⇒E}]{B \true}{A \true & A ⇒ B \true}
-$$
-The introduction rule on the left states that assuming some initial hypothesis $A$, if we then proceed to show $B$, then $A ⇒ B$ holds; however we must remember to discharge our initial hypothesis of $A$. It can be thought of as taking the entire derivation tree of $B$ from the hypothetical $A$ and stating it more succinctly as $A ⇒ B$.
-
-The elimination rule on the right should be obvious.
 \paragraph{Universal quantification}
 $$
 \infer[\mathrm{∀I^u}]{∀x.A \true}{\infer*{A[x:=t] \true}{\infer[u]{t \term}}}
@@ -78,36 +62,60 @@ The elimination rule says that in order to prove anything from a proof of $∃x.
 
 
 \section{Dependent types}
-A dependent type is a type which depends on other values. For example, the type of vectors of natural numbers of length $n$ depends on the concrete value of $n$. There are two basic building blocks used to construct dependent types.
+A dependent type is a type which depends on other values. For example, the type of vectors of natural numbers of length $n$ depends on the concrete value of $n$.
+\subsection{λΠ}
+The simplest system of dependent types, usually referred to as λΠ, is outlined below. There are two basic building blocks used to construct dependent types.
 
 \paragraph{Dependent functions}
 A dependent function is a function from some value $a$ of type $A$ to the type $B(a)$. Formally, this is written as $∏(a:A).B(a)$. For example, $∏(n:ℕ).Vecℕ(n)$ would be a function from some $n:ℕ$ to the type of vectors of natural numbers of length $n$, where we write $Vecℕ(n)$ for $n$-tuples of natural numbers. If $B(a)$ is a constant function to some type $C$, then we get a regular function type $A → C$, familiar from the Simply typed λ calculus. For example, $∏(n:ℕ).ℕ $ is equivalent to $ℕ → ℕ$.
 
 \paragraph{Dependent pairs}
-A dependent pair is a pair where the value $a:A$ of the first element determines the type of the second element $B(a)$. This is written as $∑(a:A).B(a)$. If $B(a)$ is a constant function to some type $C$, then we get a regular non-dependent pair of the type $A×C$.
+A dependent pair is a pair where the value $a:A$ of the first element determines the type of the second element $B(a)$. This is written as $∑(a:A).B(a)$. If $B(a)$ is a constant function to some type $C$, then we get a regular non-dependent pair of the type $A × C$.
 
-\subsection{Systems of the Lambda cube}
-I have outlined the basic system of dependent types, usually refered to as $λΠ$, in the previous section. In $λΠ$, dependent functions and pairs are allowed to range only over values, as was the case in e.g.\ the type of vectors of some length $n$. We saw that already this system subsumed the type operators $→$ and $×$ from $λ→$. When we further extend the range of the binders $∏$ and $∑$ to allow ranging over types, we immediately obtain a richer system. This system, $λΠ2$, now subsumes the polymorphic $Λ$ operator known from the Polymorphic λ calculus. When we further allow the binders to range over higher types, we obtain the system $λΠω$. This system is the basis of proof assistant Coq.
+\paragraph{}
+This is the basic outline of the simplest system of dependent types, usually referred to as $λΠ$. The operators $''Π''$ and $''Σ''$ are allowed to range only over values, as was the case in e.g.\ the type of vectors of some length $n$. We saw that already this system subsumed the type operators $''→''$ and $''×''$ from $λ→$.
 
-This hierarchy is outlined in Figure~\ref{lc}.
+\subsection{λΠ2}
+When we further extend the range of the $''∏''$ and $''∑''$ operators to allow ranging over types, we immediately obtain a richer system. This system now subsumes the $''Λ''$ operator known from the Polymorphic λ calculus. For example, we can now generalize our example of vectors from the previous section to all types of elements, rather than just one fixed type:
+$$ Π(A:Ω).Π(n:ℕ).Vec(A, n) $$
+Here, $Ω$ stands for the type of all atomic types in our system.
+
+When we further allow the binders to range over higher types, we obtain the system $λΠω$. This system serves as a basis for the proof assistant Coq\cite{bertot2013interactive}. This hierarchy is outlined in Figure~\ref{lc}.
 
 \begin{figure}
     \[
         \begin{tikzcd}[row sep=large]
-            & λω \ar{rr} \ar[from=dd] & & λΠ \\
+            & λω \ar{rr} \ar[from=dd] & & λΠω \\
             λ2 \ar{ur} \ar[rr, crossing over] & & λΠ2 \ar[ur, very thick] \\
-            & λω \ar{rr} & & λΠω \ar{uu} \\
+            & λ\underline{ω} \ar{rr} & & λΠ\underline{ω} \ar{uu} \\
             λ→ \ar[rr, very thick] \ar{uu} \ar{ur} & & λΠ \ar[uu, crossing over, very thick] \ar{ur} \\
         \end{tikzcd}
     \]
     \caption{The Lambda cube. Path we have followed in thick.}
-    \label{lc}
+\label{lc}
 \end{figure}
 
 \section{The Curry-Howard correspondence}
 
 
 \section{Dependent types in practice}
+In this section, I have included a practical demonstration of dependent types. We will use a practical proof assistant/programming language based on dependent type theory called Agda~\cite{norell2007towards}.
 
+\begin{code}
+    data _∧_ (P : Set) (Q : Set) : Set where
+    ∧-int : P → Q → (P ∧ Q)
 
+    ∧-elim₁ : {P Q : Set} → (P ∧ Q) → P
+    ∧-elim₁ (∧-int p q) = p
+
+    ∧-elim₂ : {P Q : Set} → (P ∧ Q) → Q
+    ∧-elim₂ (∧-int p q) = q
+
+    ∧-comm' : {P Q : Set} → (P ∧ Q) → (Q ∧ P)
+    ∧-comm' (∧-int p q) = ∧-int q p
+\end{code}
+
+\section{A note on decidability}
+
+\printbibliography{}
 \end{document}
