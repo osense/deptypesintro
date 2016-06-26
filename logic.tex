@@ -42,29 +42,7 @@ This short essay aims to give an intuitive overview of Dependent types, their co
 \section{Introduction}
 In sections – through –, some prior knowledge of the Curry-Howard isomorphism and related topics is assumed. An outline can be found in e.g.~\cite{mcadams2013tutorial}.
 
-\section{First-order predicate logic}
-
-
-\subsection{Natural deduction}
-\paragraph{Universal quantification}
-$$
-\infer[\mathrm{∀I^u}]{∀x.A \true}{\infer*{A[x:=t] \true}{\infer[u]{t \term}}}
-\qquad
-\infer[\mathrm{∀E}]{A[x:=t] \true}{∀x.A \true & t \term}
-$$
-The introduction rule is easier to read bottom to top: if we wish to conclude $∀x.A$, then we are required to show that if we replace every instance of $x$ in $A$ with some arbitrary term $t$, $A$ still holds. The term $t$ can be thought of as a variable, because we are not allowed to assume anything about it — it is just some $t$.
-
-The rule on the right is, again, rather obvious — it allows us to specialize a universally qualified formula back into some term.
-\paragraph{Existential quantification}
-$$
-\infer[\mathrm{∃I^u}]{∃x.A[t:=x] \true}{A \true}
-\qquad
-\infer[\mathrm{∃E^{u,v}}]{B \true}{∃x.A \true & \infer*{B \true}{\qquad \infer[u]{t \term} & \infer[v]{A[x:=t] \true}}}
-$$
-Here, the introduction rule states that if we have a proposition $A$ containing some term $t$ which happens to be true, then we can abstract away from the specific $t$ and simply conclude the existence of some $x$ where $A[t:=x]$ is true.
-
-The elimination rule says that in order to prove anything from a proof of $∃x.A$, we must first find some term $t$, which can be substituted into $A$ instead of the variable $x$. Then, if we can prove some proposition $B$ from that $A[x:=t]$, we may conclude $B$, eliminating the existential quantifier.
-
+\newpage
 
 \section{Dependent types}
 A dependent type is a type which depends on other values. For example, the type of vectors of natural numbers of length $n$ depends on the concrete value of $n$.
@@ -72,20 +50,20 @@ A dependent type is a type which depends on other values. For example, the type 
 The simplest system of dependent types, usually referred to as λΠ, is outlined below. There are two basic building blocks used to construct dependent types.
 
 \paragraph{Dependent functions}
-A dependent function is a function from some value $a$ of type $A$ to the type $B(a)$. Formally, this is written as $∏(a:A).B(a)$. For example, $∏(n:ℕ).Vecℕ(n)$ would be a function from some $n:ℕ$ to the type of vectors of natural numbers of length $n$, where we write $Vecℕ(n)$ for $n$-tuples of natural numbers. If $B(a)$ is a constant function to some type $C$, then we get a regular function type $A → C$, familiar from the Simply typed λ calculus. For example, $∏(n:ℕ).ℕ $ is equivalent to $ℕ → ℕ$.
+A dependent function is a function from some value $a$ of type $A$ to the type $B(a)$. Formally, this is written as $Π(a:A).B(a)$. For example, $Π(n:ℕ).Vecℕ(n)$ would be a function from some $n:ℕ$ to the type of vectors of natural numbers of length $n$, where we write $Vecℕ(n)$ for $n$-tuples of natural numbers. If $B(a)$ is a constant function to some type $C$, then we get a regular function type $A → C$, familiar from the Simply typed λ calculus. For example, $Π(n:ℕ).ℕ $ is equivalent to $ℕ → ℕ$.
 
 \paragraph{Dependent pairs}
-A dependent pair is a pair where the value $a:A$ of the first element determines the type of the second element $B(a)$. This is written as $∑(a:A).B(a)$. If $B(a)$ is a constant function to some type $C$, then we get a regular non-dependent pair of the type $A × C$.
+A dependent pair is a pair where the value $a:A$ of the first element determines the type of the second element $B(a)$. This is written as $Σ(a:A).B(a)$. If $B(a)$ is a constant function to some type $C$, then we get a regular non-dependent pair of the type $A × C$.
 
 \paragraph{}
 This is the basic outline of the simplest system of dependent types, usually referred to as $λΠ$. The operators $''Π''$ and $''Σ''$ are allowed to range only over values, as was the case in e.g.\ the type of vectors of some length $n$. We saw that already this system subsumed the type operators $''→''$ and $''×''$ from $λ→$.
 
 \subsection{λΠ2}
-When we further extend the range of the $''∏''$ and $''∑''$ operators to allow ranging over types, we immediately obtain a richer system. This system now subsumes the $''Λ''$ operator known from the Polymorphic λ calculus. For example, we can now generalize our example of vectors from the previous section to all types of elements, rather than just one fixed type:
+When we further extend the range of the $''Π''$ and $''Σ''$ operators to allow ranging over types, we immediately obtain a richer system. This system now subsumes the $''Λ''$ operator known from the Polymorphic λ calculus. For example, we can now generalize our example of vectors from the previous section to all types of elements, rather than just one fixed type:
 $$ Π(A:Ω).Π(n:ℕ).Vec(A, n) $$
 Here, $Ω$ stands for the type of all atomic types in our system.
 
-When we further allow the binders to range over higher types, we obtain the system $λΠω$. This system serves as a basis for the proof assistant Coq\cite{bertot2013interactive}. This hierarchy is outlined in Figure~\ref{lc}.
+When we further allow the binders to range over higher types, we obtain the system $λΠω$. This system, with some extensions, serves as the basis for the proof assistant Coq~\cite{bertot2013interactive}. This hierarchy is outlined in Figure~\ref{lc}.
 
 \begin{figure}
     \[
@@ -104,7 +82,7 @@ When we further allow the binders to range over higher types, we obtain the syst
 
 
 \section{Dependent types in practice}
-In this section, I have included a practical demonstration of dependent types. We will use a proof assistant/programming language based on intuitionistic type theory called Agda~\cite{norell2007towards}.
+In this section, I have included a practical demonstration of dependent types. We will use a proof assistant/programming language based on intuitionistic type theory called Agda~\cite{norell2007towards}. Agda is even more expressive than λΠω, as it constitutes a so-called Pure Type System. Pure Type Systems are a generalization over the systems of the λ cube from Figure~\ref{lc}~\cite{sorensen2006lectures}.
 
 \subsection{Vectors}
 We have already seen that dependent types make it possible to define vectors of fixed lenght. To encode vectors in Agda, we will first have to define natural numbers.
@@ -113,7 +91,7 @@ We have already seen that dependent types make it possible to define vectors of 
       zero : ℕ 
       succ : ℕ → ℕ
 \end{verbatim}
-This is a data type declaration with two constructors. The first, nullary constructor simply represents zero. The second, unary constructor represent the successor function. For example to encode the number 4, we would write \verb|succ(succ(succ(succ(zero))))|.
+This is a data type declaration with two constructors. The first, nullary constructor simply represents zero. The second, unary constructor represent the successor function. For example to encode the number 4, we would write \verb|succ(succ(succ(succ(zero))))|. The type \verb|ℕ| is itself of the type \verb|Set|.
 
 Equipped with Peano numbers, we can now define the type of vectors.
 \begin{verbatim}
@@ -121,7 +99,7 @@ Equipped with Peano numbers, we can now define the type of vectors.
       []   : Vec A zero
       _::_ : {n : ℕ} → A →  Vec A n → Vec A (succ n)
 \end{verbatim}
-Here again we have two constructors. The first constructor simply represents an empty vector (of any type). The second constructor prepends a value to the head of a vector. For example, the vector $[1, 2, 3]$ would be represented as \verb|1 :: (2 :: (3 :: []))|.
+A vector is parametrized by the type of it's elements \verb|A| and is itself of the type \verb|ℕ → Set|. Again we have two constructors; the first constructor simply represents an empty vector. The second constructor prepends a value to the head of a vector. For example, the vector $[1, 2, 3]$ would be represented as \verb|1 :: (2 :: (3 :: []))|.
 
 Compared to regular lists of any length, the immediate improvement is that now we can define our \verb|head| and \verb|tail| functions in a manner which enforces these to be only applied to non-empty vectors.
 \begin{verbatim}
@@ -172,18 +150,18 @@ In the previous subsection, we have seen a few examples of how dependent types c
 Our system will closely model the rules of Natural Deduction. We will define introduction as a data type constructor, and eliminations as functions.
 \begin{verbatim}
     data _∧_ (P : Set) (Q : Set) : Set where
-      ∧-int : P → Q → (P ∧ Q)
+      _,_ : P → Q → (P ∧ Q)
 
-    ∧-elim₁ : {P Q : Set} → (P ∧ Q) → P 
-    ∧-elim₁ (∧-int p q) = p 
+    ∧-elim₁ : {P Q : Set} → (P ∧ Q) → P
+    ∧-elim₁ (p , q) = p
 
-    ∧-elim₂ : {P Q : Set} → (P ∧ Q) → Q 
-    ∧-elim₂ (∧-int p q) = q
+    ∧-elim₂ : {P Q : Set} → (P ∧ Q) → Q
+    ∧-elim₂ (p , q) = q
 \end{verbatim}
 We can prove some basic properties of conjunction, e.g.~commutativity. We will implement a function, which — with the help of pattern matching — deconstructs the proof of $p ∧ q$ into proofs of $p$ and $q$, and then arranges them back into a conjunction in the required order. This corresponds with the standard understanding of implication in intuitionistic logic.
 \begin{verbatim}
     ∧-comm' : {P Q : Set} → (P ∧ Q) → (Q ∧ P)
-    ∧-comm' (∧-int p q) = ∧-int q p
+    ∧-comm' (p , q) = (q , p)
 \end{verbatim}
 Note that, strictly speaking, we have only proved one direction of the equivalence. In this simple case this makes no difference, as both directions are analogous, however in more complex proofs we would wish to prove both directions. We will therefore define equivalence on a meta-level (not inside our Natural Deduction system) and restate the commutativity proof.
 \begin{verbatim}
@@ -191,75 +169,70 @@ Note that, strictly speaking, we have only proved one direction of the equivalen
     p ⇔ q = (p → q) ∧ (q → p)
 
     ∧-comm : {P Q : Set} → (P ∧ Q) ⇔ (Q ∧ P)
-    ∧-comm = ∧-int ∧-comm' ∧-comm'
+    ∧-comm = (∧-comm' , ∧-comm')
 \end{verbatim}
 The commutativity proof now reflects our intuitive understanding of it. Both implications are analogous, therefore we can simply reuse our original proof in both directions.
 
 Associativity can be proved in a very similar fashion. We can view the first two functions as lemmas, and the third function as a corrolary.
 \begin{verbatim}
     ∧-assoc¹ : {P Q R : Set} → (P ∧ (Q ∧ R)) → ((P ∧ Q) ∧ R)
-    ∧-assoc¹ (∧-int p (∧-int q r)) = ∧-int (∧-int p q) r
+    ∧-assoc¹ (p , (q , r)) = ((p , q) , r)
 
     ∧-assoc² : {P Q R : Set} → ((P ∧ Q) ∧ R) → (P ∧ (Q ∧ R))
-    ∧-assoc² (∧-int (∧-int p q) r) = ∧-int p (∧-int q r)
+    ∧-assoc² ((p , q) , r) = (p , (q , r))
 
     ∧-assoc : {P Q R : Set} → (P ∧ (Q ∧ R)) ⇔ ((P ∧ Q) ∧ R)
-    ∧-assoc = ∧-int ∧-assoc¹ ∧-assoc²
+    ∧-assoc = (∧-assoc¹ , ∧-assoc²)
 \end{verbatim}
 
 \paragraph{Disjunction}
 We will now define disjunction. As in Natural Deduction, we will employ two introductions and one elimination.
 \begin{verbatim}
     data _∨_ (P : Set) (Q : Set) : Set where
-      ∨-int₁ : P → (P ∨ Q)
-      ∨-int₂ : Q → (P ∨ Q)
+      left : P → (P ∨ Q)
+      right : Q → (P ∨ Q)
 
-    ∨-elim : {P Q R : Set} → (P → R) → (Q → R) → (P ∨ Q) → R 
-    ∨-elim f _ (∨-int₁ p) = f p 
-    ∨-elim _ g (∨-int₂ q) = g q
+    ∨-elim : {P Q R : Set} → (P → R) → (Q → R) → (P ∨ Q) → R
+    ∨-elim f _ (left p) = f p
+    ∨-elim _ g (right q) = g q
 \end{verbatim}
 Once again, our functions closely model the rules of Natural Deduction. We will not concern ourselves with the proofs of commutativity and associativity, as they are similar to those of conjunction.
 
-Instead, we will present proofs of theorems of both our logical connectives combined\footnote{That is, identities valid in any Boolean algebra.}. A proof of absorption can be formalized thusly:
+Instead, we will present proofs of theorems of both our logical connectives combined\footnote{That is, identities valid in the variety of Boolean algebras.}. A proof of absorption can be formalized thusly:
 \begin{verbatim}
-    abs₁ : {P Q : Set} → (P ∧ (P ∨ Q)) ⇔ P 
-    abs₁ = ∧-int ∧-elim₁
-                 (λ p → ∧-int p (∨-int₁ p))
-
-    id : {A : Set} → A → A
-    id x = x
+    abs₁ : {P Q : Set} → (P ∧ (P ∨ Q)) ⇔ P
+    abs₁ = (∧-elim₁ , λ p → (p , left p))
 
     abs₂ : {P Q : Set} → (P ∨ (P ∧ Q)) ⇔ P
-    abs₂ = ∧-int (∨-elim id ∧-elim₁)
-                 ∨-int₁
+    abs₂ = (∨-elim (λ x → x) ∧-elim₁ , left)
 \end{verbatim}
 One direction of the theorems is always trivial; the other has to be constructed appropriately. For this, we utilize a lambda expression in the first theorem, and we have to eliminate a disjunction in the second theorem — in this case, the identity function comes in handy.
 
 Finally, we shall prove the distributive laws. These are a bit more wordy, however they follow the same principles of simply reorganizing the formulas as we require.
 \begin{verbatim}
     distrib₁¹ : {P Q R : Set} → (P ∧ (Q ∨ R)) → ((P ∧ Q) ∨ (P ∧ R))
-    distrib₁¹ (∧-int p (∨-int₁ q)) = ∨-int₁ (∧-int p q)
-    distrib₁¹ (∧-int p (∨-int₂ r)) = ∨-int₂ (∧-int p r)
+    distrib₁¹ (p , (left q)) = left (p , q)
+    distrib₁¹ (p , (right r)) = right (p , r)
 
     distrib₁² : {P Q R : Set} → ((P ∧ Q) ∨ (P ∧ R)) → (P ∧ (Q ∨ R))
-    distrib₁² (∨-int₁ (∧-int p q)) = ∧-int p (∨-int₁ q)
-    distrib₁² (∨-int₂ (∧-int p r)) = ∧-int p (∨-int₂ r)
+    distrib₁² (left (p , q)) = p , (left q)
+    distrib₁² (right (p , r)) = p , (right r)
 
     distrib₁ : {P Q R : Set} → (P ∧ (Q ∨ R)) ⇔ ((P ∧ Q) ∨ (P ∧ R))
-    distrib₁ = ∧-int distrib₁¹ distrib₁²
+    distrib₁ = (distrib₁¹ , distrib₁²)
 
 
     distrib₂¹ : {P Q R : Set} → (P ∨ (Q ∧ R)) → ((P ∨ Q) ∧ (P ∨ R))
-    distrib₂¹ (∨-int₁ p) = ∧-int (∨-int₁ p) (∨-int₁ p)
-    distrib₂¹ (∨-int₂ (∧-int q r)) = ∧-int (∨-int₂ q) (∨-int₂ r)
+    distrib₂¹ (left p) = (left p , left p)
+    distrib₂¹ (right (q , r)) = (right q , right r)
 
     distrib₂² : {P Q R : Set} → ((P ∨ Q) ∧ (P ∨ R)) → (P ∨ (Q ∧ R))
-    distrib₂² (∧-int (∨-int₁ p) _) = ∨-int₁ p
-    distrib₂² (∧-int _ (∨-int₁ p)) = ∨-int₁ p
-    distrib₂² (∧-int (∨-int₂ q) (∨-int₂ r)) = ∨-int₂ (∧-int q r)
+    distrib₂² ((left p) , _) = left p
+    distrib₂² (_ , (left p)) = left p
+    distrib₂² ((right q) , (right r)) = right (q , r)
 
     distrib₂ : {P Q R : Set} → (P ∨ (Q ∧ R)) ⇔ ((P ∨ Q) ∧ (P ∨ R))
-    distrib₂ = ∧-int distrib₂¹ distrib₂²
+    distrib₂ = (distrib₂¹ , distrib₂²)
 \end{verbatim}
 Note that at several occasions we have avoided having to use disjunction elimination, and instead utilized pattern matching to handle the distinct possibilities of deconstructing a proof of $p ∨ q$ and finding within a proof of either $p$, or $q$.
 
