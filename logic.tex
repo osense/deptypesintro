@@ -40,7 +40,7 @@ This short essay aims to give an intuitive overview of Dependent types, their co
 \end{abstract} 
 
 \section{Introduction}
-Some prior knowledge of the Curry-Howard isomorphism and related topics is assumed, such as outlined in e.g.~\cite{mcadams2013tutorial}.
+In sections – through –, some prior knowledge of the Curry-Howard isomorphism and related topics is assumed. An outline can be found in e.g.~\cite{mcadams2013tutorial}.
 
 \section{First-order predicate logic}
 
@@ -104,7 +104,7 @@ When we further allow the binders to range over higher types, we obtain the syst
 
 
 \section{Dependent types in practice}
-In this section, I have included a practical demonstration of dependent types. We will use a proof assistant/programming language based on dependent type theory called Agda~\cite{norell2007towards}.
+In this section, I have included a practical demonstration of dependent types. We will use a proof assistant/programming language based on intuitionistic type theory called Agda~\cite{norell2007towards}.
 
 \subsection{Vectors}
 We have already seen that dependent types make it possible to define vectors of fixed lenght. To encode vectors in Agda, we will first have to define natural numbers.
@@ -123,15 +123,15 @@ Equipped with Peano numbers, we can now define the type of vectors.
 \end{verbatim}
 Here again we have two constructors. The first constructor simply represents an empty vector (of any type). The second constructor prepends a value to the head of a vector. For example, the vector $[1, 2, 3]$ would be represented as \verb|1 :: (2 :: (3 :: []))|.
 
-Compared to regular lists of any length, the immediate improvement is that now we can define our \verb|head| and \verb|tail| functions in a manner which enfrorces these to be only applied to non-empty vectors.
+Compared to regular lists of any length, the immediate improvement is that now we can define our \verb|head| and \verb|tail| functions in a manner which enforces these to be only applied to non-empty vectors.
 \begin{verbatim}
-    head : ∀ {n A} → Vec A (succ n) → A 
-    head (x :: _) = x 
+    head : {n : ℕ} → {A : Set} → Vec A (succ n) → A
+    head (x :: _) = x
 
-    tail : ∀ {n A} → Vec A (succ n) → Vec A n 
+    tail : {n : ℕ} → {A : Set} → Vec A (succ n) → Vec A n
     tail (_ :: xs) = xs
 \end{verbatim}
-Note that the length of the input vector is \verb|succ n|. This enforces the programmer to always pass to the function an input vector of length at least $1$, otherwise the code will not pass type checking.
+Note that the length of the input vector is \verb|succ n|. This enforces the programmer to always pass to the function an input vector of length at least $1$, otherwise the type checker will not successfully verify the code.
 
 \paragraph{}
 We can define addition and multiplication on Peano numbers recursively.
@@ -146,30 +146,30 @@ We can define addition and multiplication on Peano numbers recursively.
 \end{verbatim}
 With these operations, we can now express more advanced functions on vectors.
 \begin{verbatim}
-    append : ∀ {n m A} → Vec A n → Vec A m → Vec A (n + m)
+    append : {n m : ℕ} → {A : Set} → Vec A n → Vec A m → Vec A (n + m)
     append [] ys = ys
     append (x :: xs) ys = x :: append xs ys
 
-    concat : ∀ {n m A} → Vec (Vec A m) n → Vec A (n * m)
+    concat : {n m : ℕ} → {A : Set} → Vec (Vec A m) n → Vec A (n * m)
     concat [] = []
     concat (xs :: xss) = append xs (concat xss)
 \end{verbatim}
 \verb|append| simply appends two vectors, whereas \verb|concat| concatenates a vector of vectors into a single vector. Note that each vector is of the same, fixed length $m$ inside the outer vector of length $n$. This is a natural way to encode matrices. As an example of a matrix function, we might want to extract the diagonal of a matrix. However, the matrix must be square! This is easy to express on the type level.
 \begin{verbatim}
-    map : ∀ {n A B} → Vec (A → B) n → Vec A n → Vec B n
+    map : {n : ℕ} → {A B : Set} → Vec (A → B) n → Vec A n → Vec B n
     map [] [] = []
     map (f :: fs) (x :: xs) = (f x) :: (map fs xs)
 
-    diagonal : ∀ {n A} → Vec (Vec A n) n → Vec A n
+    diagonal : {n : ℕ} → {A : Set} → Vec (Vec A n) n → Vec A n
     diagonal [] = []
     diagonal (xs :: xss) = head xs :: diagonal (map tail xss)
 \end{verbatim}
 
 \subsection{Natural deduction}
-In the previous subsection, we have seen a few examples of how dependent types can help us be more expressive about our computations. In this subsection, we will look at another application of dependent types — theorem proving. Following the Curry–Howard Isomorphism, this should come as no surprise. Dependent types are very expressive, which is why they are fitting for the task. Now, let us prove some basic properties of Natural Deduction.
+In the previous subsection, we have seen a few examples of how dependent types can help us be more expressive about the types of our computations. In this subsection, we will look at another application of dependent types — theorem proving. Following the Curry–Howard Isomorphism, this should come as no surprise. Dependent types are very expressive, which is why they are fitting for the task. Now, let us prove some basic properties of Propositional logic.
 
 \paragraph{Conjunction}
-Our system will closely model the rules of Natural Deduction. We will define introduction as a data type constructor, and eleminations as functions.
+Our system will closely model the rules of Natural Deduction. We will define introduction as a data type constructor, and eliminations as functions.
 \begin{verbatim}
     data _∧_ (P : Set) (Q : Set) : Set where
       ∧-int : P → Q → (P ∧ Q)
@@ -180,7 +180,7 @@ Our system will closely model the rules of Natural Deduction. We will define int
     ∧-elim₂ : {P Q : Set} → (P ∧ Q) → Q 
     ∧-elim₂ (∧-int p q) = q
 \end{verbatim}
-We can prove some basic properties of conjunction, e.g.~commutativity. With the help of pattern matching, we will simply deconstruct the proof of $p ∧ q$ into proofs of $p$ and $q$, and then arrange them back into a conjunction in the required order.
+We can prove some basic properties of conjunction, e.g.~commutativity. We will implement a function, which — with the help of pattern matching — deconstructs the proof of $p ∧ q$ into proofs of $p$ and $q$, and then arranges them back into a conjunction in the required order. This corresponds with the standard understanding of implication in intuitionistic logic.
 \begin{verbatim}
     ∧-comm' : {P Q : Set} → (P ∧ Q) → (Q ∧ P)
     ∧-comm' (∧-int p q) = ∧-int q p
@@ -261,6 +261,7 @@ Finally, we shall prove the distributive laws. These are a bit more wordy, howev
     distrib₂ : {P Q R : Set} → (P ∨ (Q ∧ R)) ⇔ ((P ∨ Q) ∧ (P ∨ R))
     distrib₂ = ∧-int distrib₂¹ distrib₂²
 \end{verbatim}
+Note that at several occasions we have avoided having to use disjunction elimination, and instead utilized pattern matching to handle the distinct possibilities of deconstructing a proof of $p ∨ q$ and finding within a proof of either $p$, or $q$.
 
 \section{A note on decidability}
 
