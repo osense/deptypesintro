@@ -1,6 +1,7 @@
 \documentclass[12pt]{article}
 \usepackage{fontspec}
 \setmainfont{Latin Modern Math}
+\setmonofont[Scale=0.85]{DejaVu Sans Mono}
 \usepackage{unicode-math}
 \usepackage[english]{babel}
 \usepackage{proof}
@@ -10,8 +11,7 @@
 \usepackage{latexsym}
 \usepackage{tikz-cd}
 
-\usepackage{code}
-\newenvironment{code}{\code}{\endverbatim}
+\usepackage{verbatim}
 
 \usepackage[backend=bibtex]{biblatex}
 \bibliography{citations}
@@ -105,34 +105,34 @@ In this section, I have included a practical demonstration of dependent types. W
 
 \subsection{Vectors}
 We have already seen that dependent types make it possible to define vectors of fixed length. To encode vectors in Agda, we will first have to define natural numbers.
-\begin{code}
+\begin{verbatim}
     data ℕ : Set where
       zero : ℕ 
       succ : ℕ → ℕ
-\end{code}
+\end{verbatim}
 This is a data type declaration with two constructors. The first, nullary constructor simply represents zero. The second, unary constructor represent the successor function. For example to encode the number 5, we would write \verb|succ(succ(succ(succ(zero))))|. The type \verb|ℕ| is itself of the type \verb|Set|.
 
 Equipped with Peano numbers, we can now define the type of vectors.
-\begin{code}
+\begin{verbatim}
     data Vec (A : Set) : ℕ → Set where
       []   : Vec A zero
       _::_ : {n : ℕ} → A →  Vec A n → Vec A (succ n)
-\end{code}
+\end{verbatim}
 A vector is parametrized by the type of it's elements \verb|A| and is itself of the type \verb|ℕ → Set|. Again we have two constructors; the first constructor simply represents an empty vector. The second constructor prepends a value to the head of a vector. For example, the vector $[1, 2, 3]$ would be represented as \verb|1 :: (2 :: (3 :: []))|.
 
 Compared to regular lists of any length, the immediate improvement is that now we can define our \verb|head| and \verb|tail| functions in a manner which enforces these to be only applied to non-empty vectors.
-\begin{code}
+\begin{verbatim}
     head : {n : ℕ} → {A : Set} → Vec A (succ n) → A
     head (x :: _) = x
 
     tail : {n : ℕ} → {A : Set} → Vec A (succ n) → Vec A n
     tail (_ :: xs) = xs
-\end{code}
+\end{verbatim}
 Note that the length of the input vector is \verb|succ n|. This enforces the programmer to always pass to the function an input vector of length at least $1$, otherwise the type checker will not successfully verify the code.
 
 \paragraph{}
 We can define addition and multiplication on Peano numbers recursively.
-\begin{code}
+\begin{verbatim}
     _+_ : ℕ → ℕ → ℕ
     zero + b = b
     (succ a) + b = succ (a + b)
@@ -140,9 +140,9 @@ We can define addition and multiplication on Peano numbers recursively.
     _*_ : ℕ → ℕ → ℕ
     zero * b = zero
     (succ a) * b = b + (a * b)
-\end{code}
+\end{verbatim}
 With these operations, we can now express more advanced functions on vectors.
-\begin{code}
+\begin{verbatim}
     append : {n m : ℕ} → {A : Set} → Vec A n → Vec A m → Vec A (n + m)
     append [] ys = ys
     append (x :: xs) ys = x :: append xs ys
@@ -150,24 +150,24 @@ With these operations, we can now express more advanced functions on vectors.
     concat : {n m : ℕ} → {A : Set} → Vec (Vec A m) n → Vec A (n * m)
     concat [] = []
     concat (xs :: xss) = append xs (concat xss)
-\end{code}
+\end{verbatim}
 \verb|append| simply appends two vectors, whereas \verb|concat| concatenates a vector of vectors into a single vector. Note that each vector is of the same, fixed length $m$ inside the outer vector of length $n$. This is a natural way to encode matrices. As an example of a matrix function, we might want to extract the diagonal of a matrix. However, the matrix must be square! This is easy to express on the type level.
-\begin{code}
-    map : {n : ℕ} → {A B : Set} → Vec (A → B) n → Vec A n → Vec B n
-    map [] [] = []
-    map (f :: fs) (x :: xs) = (f x) :: (map fs xs)
+\begin{verbatim}
+    map : {n : ℕ} → {A B : Set} → (A → B) → Vec A n → Vec B n
+    map _ [] = []
+    map f (x :: xs) = (f x) :: (map f xs)
 
     diagonal : {n : ℕ} → {A : Set} → Vec (Vec A n) n → Vec A n
     diagonal [] = []
     diagonal (xs :: xss) = head xs :: diagonal (map tail xss)
-\end{code}
+\end{verbatim}
 
 \subsection{Natural deduction}
 In the previous subsection, we have seen a few examples of how dependent types can help us be more expressive about the types of our computations. In this subsection, we will look at another application of dependent types — theorem proving. Following the Curry–Howard Isomorphism, this should come as no surprise. Dependent types are very expressive, which is why they are fitting for the task. Now, let us prove some basic properties of Propositional logic.
 
 \paragraph{Conjunction}
 Our system will closely model the rules of Natural Deduction. We will define introduction as a data type constructor, and eliminations as functions.
-\begin{code}
+\begin{verbatim}
     data _∧_ (P : Set) (Q : Set) : Set where
       _,_ : P → Q → (P ∧ Q)
 
@@ -176,24 +176,24 @@ Our system will closely model the rules of Natural Deduction. We will define int
 
     ∧-elim₂ : {P Q : Set} → (P ∧ Q) → Q
     ∧-elim₂ (p , q) = q
-\end{code}
+\end{verbatim}
 We can prove some basic properties of conjunction, e.g.~commutativity. We will implement a function, which — with the help of pattern matching — deconstructs the proof of $p ∧ q$ into proofs of $p$ and $q$, and then arranges them back into a conjunction in the required order. This corresponds with the standard understanding of implication in intuitionistic logic, namely that implication is a function which transforms proofs of the antecedent into proofs of the consequent.
-\begin{code}
+\begin{verbatim}
     ∧-comm' : {P Q : Set} → (P ∧ Q) → (Q ∧ P)
     ∧-comm' (p , q) = (q , p)
-\end{code}
+\end{verbatim}
 Note that, strictly speaking, we have only proved one direction of the equivalence. In this simple case this makes no difference, as both directions are analogous, however in more complex proofs we would wish to prove both directions. We will therefore define equivalence on a meta-level (not inside our Natural Deduction system) and restate the commutativity proof.
-\begin{code}
+\begin{verbatim}
     _⇔_ : (P : Set) → (Q : Set) → Set
     p ⇔ q = (p → q) ∧ (q → p)
 
     ∧-comm : {P Q : Set} → (P ∧ Q) ⇔ (Q ∧ P)
     ∧-comm = (∧-comm' , ∧-comm')
-\end{code}
+\end{verbatim}
 The commutativity proof now reflects our intuitive understanding of it. Both implications are analogous, therefore we can simply reuse our original proof in both directions.
 
 Associativity can be proved in a very similar fashion. We can view the first two functions as lemmas, and the third function as a corollary.
-\begin{code}
+\begin{verbatim}
     ∧-assoc¹ : {P Q R : Set} → (P ∧ (Q ∧ R)) → ((P ∧ Q) ∧ R)
     ∧-assoc¹ (p , (q , r)) = ((p , q) , r)
 
@@ -202,11 +202,11 @@ Associativity can be proved in a very similar fashion. We can view the first two
 
     ∧-assoc : {P Q R : Set} → (P ∧ (Q ∧ R)) ⇔ ((P ∧ Q) ∧ R)
     ∧-assoc = (∧-assoc¹ , ∧-assoc²)
-\end{code}
+\end{verbatim}
 
 \paragraph{Disjunction}
 We will now define disjunction. As in Natural Deduction, we will employ two introductions and one elimination.
-\begin{code}
+\begin{verbatim}
     data _∨_ (P : Set) (Q : Set) : Set where
       left : P → (P ∨ Q)
       right : Q → (P ∨ Q)
@@ -214,21 +214,21 @@ We will now define disjunction. As in Natural Deduction, we will employ two intr
     ∨-elim : {P Q R : Set} → (P → R) → (Q → R) → (P ∨ Q) → R
     ∨-elim f _ (left p) = f p
     ∨-elim _ g (right q) = g q
-\end{code}
+\end{verbatim}
 Once again, our functions closely model the rules of Natural Deduction. We will not concern ourselves with proofs of commutativity and associativity, as they are similar to those of conjunction.
 
 Instead, we will present proofs of theorems of both our logical connectives combined\footnote{That is, identities valid in the variety of Boolean algebras.}. A proof of absorption can be formalized thusly:
-\begin{code}
+\begin{verbatim}
     abs₁ : {P Q : Set} → (P ∧ (P ∨ Q)) ⇔ P
     abs₁ = (∧-elim₁ , λ p → (p , left p))
 
     abs₂ : {P Q : Set} → (P ∨ (P ∧ Q)) ⇔ P
     abs₂ = (∨-elim (λ x → x) ∧-elim₁ , left)
-\end{code}
+\end{verbatim}
 One direction of the theorems is always trivial; the other has to be constructed appropriately. For this, we utilize a lambda expression in the first theorem, and we have to eliminate a disjunction in the second theorem — in this case, the identity function comes in handy.
 
 Finally, we shall prove the distributive laws. These are a bit more wordy, however they follow the same principles of simply reorganizing the formulas as we require.
-\begin{code}
+\begin{verbatim}
     distrib₁¹ : {P Q R : Set} → (P ∧ (Q ∨ R)) → ((P ∧ Q) ∨ (P ∧ R))
     distrib₁¹ (p , (left q)) = left (p , q)
     distrib₁¹ (p , (right r)) = right (p , r)
@@ -252,7 +252,7 @@ Finally, we shall prove the distributive laws. These are a bit more wordy, howev
 
     distrib₂ : {P Q R : Set} → (P ∨ (Q ∧ R)) ⇔ ((P ∨ Q) ∧ (P ∨ R))
     distrib₂ = (distrib₂¹ , distrib₂²)
-\end{code}
+\end{verbatim}
 Note that at several occasions we have avoided having to use disjunction elimination, and instead utilized pattern matching to handle the distinct possibilities of deconstructing a proof of $p ∨ q$ and finding within a proof of either $p$, or $q$.
 
 \section{A note on decidability}
