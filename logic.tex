@@ -8,15 +8,17 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amsthm}
+\usepackage{amssymb}
 \usepackage{latexsym}
 \usepackage{tikz-cd}
+\usepackage{booktabs}
+\usepackage{fancyvrb}
 
-\usepackage{verbatim}
-
-\usepackage[backend=bibtex]{biblatex}
+\usepackage[backend=bibtex, sorting=none]{biblatex}
 \bibliography{citations}
 
-%\newcommand{ℕ}{\mathbb{N}}
+\binoppenalty=\maxdimen{}
+\relpenalty=\maxdimen{}
 
 \title{Introduction to Dependent types}
 \author{Adam Krupicka\\
@@ -34,7 +36,7 @@ This short paper aims to give an intuitive overview of Dependent types, their co
 \end{abstract} 
 
 \section{Introduction}
-In sections – through –, some prior knowledge of the Curry-Howard isomorphism and related topics is assumed. This can be found in e.g.~\cite{mcadams2013tutorial}.
+In sections 3 and 4, some prior knowledge of the Curry-Howard isomorphism and related topics is assumed. This can be found in e.g.~\cite{mcadams2013tutorial}.
 
 \section{Definitions}
 \paragraph{λ→} refers to the Simply typed λ calculus.
@@ -51,7 +53,7 @@ A dependent type is a type which depends on other values. For example, the type 
 The simplest system of dependent types, usually referred to as λΠ, is outlined below. There are two basic building blocks used to construct dependent types.
 
 \paragraph{Dependent functions}
-A dependent function is a function from some value $a$ of type $A$ to the type $B(a)$. Formally, this is written as $Π(a:A).B(a)$. For example, $Π(n:ℕ).Vecℕ(n)$ would be a function from some $n:ℕ$ to the type of vectors of natural numbers of length $n$, where we write $Vecℕ(n)$ for $n$-tuples of natural numbers. If $B(a)$ is a constant function to some type $C$, then we get a regular function type $A → C$, familiar from the Simply typed λ calculus. For example, $Π(n:ℕ).ℕ $ is equivalent to $ℕ → ℕ$.
+A dependent function is a function from some value $a$ of type $A$ to the type $B(a)$. Formally, this is written as $Π(a:A).B(a)$. For example, $Π(n:ℕ).\operatorname{Vecℕ}(n)$ would be a function from some $n:ℕ$ to the type of vectors of natural numbers of length $n$, where we write $\operatorname{Vecℕ}(n)$ for $n$-tuples of natural numbers. If $B(a)$ is a constant function to some type $C$, then we get a regular function type $A → C$, familiar from the Simply typed λ calculus. For example, $Π(n:ℕ).ℕ $ is equivalent to $ℕ → ℕ$.
 
 \paragraph{Dependent pairs}
 A dependent pair is a pair where the value $a:A$ of the first element determines the type of the second element $B(a)$. This is written as $Σ(a:A).B(a)$. If $B(a)$ is a constant function to some type $C$, then we get a regular non-dependent pair of the type $A × C$.
@@ -61,11 +63,12 @@ This is the basic outline of the simplest system of dependent types, usually ref
 
 \subsection{λΠ2}
 When we further extend the range of the $''Π''$ and $''Σ''$ operators to allow ranging over types, we immediately obtain a richer system. This system now subsumes the $''Λ''$ operator known from the Polymorphic λ calculus. For example, we can now generalize our example of vectors from the previous section to all types of elements, rather than just one fixed type:
-$$ Π(A:Ω).Π(n:ℕ).Vec(A, n) $$
-Here, $Ω$ stands for the type of all the types in our system, excluding $Ω$ itself.
+$$ Π(A:\mathcal{U}).Π(n:ℕ).Vec(A, n) $$
+Here, $\mathcal{U}$ stands for the type of all the types in our system, excluding $\mathcal{U}$ itself.
 
 \subsection{λΠω}
-When we further allow the operators to range over higher types, we obtain the system $λΠω$. Here we define a hierarchy of so-called universes, where the type $Ω$ from the previous section (whose type was unclear, or perhaps it did not have a type at all) becomes $Ω₀$ of the type $Ω₁$, which is itself of the type $Ω₂$, and so on; these are the universes. This hierarchy lets us define higher level functions, e.g.~the type $ℕ → Ω₀$ (type of a function, which to each natural number assigns a type from the universe $Ω₀$) would live inside the universe $Ω₁$.
+\label{universes}
+When we further allow the operators to range over higher types, we obtain the system $λΠω$. Here we define a hierarchy of so-called universes, where the type $\mathcal{U}$ from the previous section (whose type was unclear, or perhaps it did not have a type at all) becomes $\mathcal{U}₀$ of the type $\mathcal{U}₁$, which is itself of the type $\mathcal{U}₂$, and so on; these are the universes. This hierarchy lets us define higher level functions, e.g.~the type $ℕ → \mathcal{U}₀$ (type of a function, which to each natural number assigns a type from the universe $\mathcal{U}₀$) would live inside the universe $\mathcal{U}₁$.
 
 This system, with some extensions, serves as the basis for the proof assistant Coq~\cite{bertot2013interactive}. This hierarchy is outlined in Figure~\ref{lc}.
 
@@ -83,56 +86,68 @@ This system, with some extensions, serves as the basis for the proof assistant C
 \end{figure}
 
 \section{The Curry-Howard correspondence}
+Curry was first to observe that types of combinators in Combinatory logic corresponded with axiom-schemas in certain Proof calculi. Later, Howard noticed that a proof calculus called Natural deduction could be directly interpreted as λ→, with this correspondence:\\
+\begin{center}
+\begin{tabular}{c c}
+    Natural deduction & λ→ \\
+    \toprule
+    propositions & types of terms \\
+    proofs & programs \\
+    proof normalization & program execution \\
+\end{tabular}
+\end{center}
+Lambek showed that the correspondence can be extended to cartesian closed categories, thus making it three-fold.
+
 Dependent types were first introduced in an attempt to find a corresponding λ calculus for intuitionistic First-order order predicate logic. In this section, I will give a brief outline of the correspondence. For the curious reader, more information can be found in e.g.~\cite{sorensen2006lectures}.
 
 It should be noted that the logic I am drawing the correspondence with is a many-sorted first-order logic. Although it is possible to draw the correspondence with regular first-order logic, the dependent λ calculus thus obtained would be rather restrictive, as it would allow us to construct types only from one atomic type.
 
 
 \paragraph{Quantifiers}
-A proof of the formula $∀x:A.φ(x)$ is, under the BHK interpretation, a function transforming all inputs of the type $A$ into proofs of $φ(x)$. One can see that it is similar to the interpretation of the formula $A → B$ (which is a function transforming proofs of $A$ into proofs of $B$). The difference is that in the proof of $∀x:A.φ(x)$, the consequent depends on the value of the antecedent. The formulas of the form $∀x:A.φ(x)$ correspond to the type of the dependent function.
+A proof of the formula $∀x:A.φ(x)$ is, under the BHK interpretation, a function transforming all inputs of the type $A$ into proofs of $φ(x)$. One can see that it is similar to the interpretation of the formula $A → B$ (which is a function transforming proofs of $A$ into proofs of $B$). The difference is that in the proof of $∀x:A.φ(x)$, the `consequent' depends on the value of the `antecedent'. The formulas of the form $∀x:A.φ(x)$ correspond to the type of the dependent function.
 
 The situation is analogous in the case of the formulas of the form $∃x:A.φ(x)$. A proof of such a proposition is a pair of some $x$, and a proof of $φ(x)$. This corresponds to the dependent pair.
 
 \paragraph{Predicates}
 Predicates serve the role of type constructors — if $A$ is a n-ary predicate, then $A(t₁, …, t_n)$ (for some terms $t₁, …, t_n$) is a type. Nullary predicates can be viewed as atomic types, e.g.~the type $ℕ$ of natural numbers.
 
-\paragraph{Functionals}
-The role of functional symbols is perhaps less clear. They seem to suggest that we can perform some limited computation on the type level. For example, assuming the nullary  predicate $ℕ$ of natural numbers, $Vecℕ$ unary predicate of n-tuples of natural numbers, $''+''$ binary functional symbol, and $1$ nullary functional symbol (i.e.~a constant), we could write $∀n:ℕ.Vec(n+1)$ to be the type of tuples of natural numbers of length at least one.
-
+\subsection{Equality and decidability}
+The language of First-order logic usually includes also equality. It is also necessary to decide the unifiability of some types when attempting to type check function application. Compared to the type system of λ→, this task is less trivial in dependently typed systems. Consider, for example, the type of vectors of natural numbers of length 3: $\operatorname{Vecℕ}(3)$. When working with natural numbers, we might find it convenient to define addition — thus allowing us to write e.g.~$\operatorname{Vecℕ}(2 + 1)$ to express the same type. This has the consequence of having to perform computation on the type level when type checking our programs. Thus it is convenient to limit ourselves to total functions on the type level, else the type checking of our program becomes undecidable.
 
 \section{Dependent types in practice}
 In this section, I have included a practical demonstration of dependent types. We will use a proof assistant/programming language based on intuitionistic type theory called Agda~\cite{norell2007towards}. Agda is even more expressive than λΠω, as it constitutes a so-called Pure Type System. Pure Type Systems are a generalization over the systems of the λ cube from Figure~\ref{lc}~\cite{sorensen2006lectures}.
 
 \subsection{Vectors}
 We have already seen that dependent types make it possible to define vectors of fixed length. To encode vectors in Agda, we will first have to define natural numbers.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     data ℕ : Set where
       zero : ℕ 
       succ : ℕ → ℕ
-\end{verbatim}
-This is a data type declaration with two constructors. The first, nullary constructor simply represents zero. The second, unary constructor represent the successor function. For example to encode the number 5, we would write \verb|succ(succ(succ(succ(zero))))|. The type \verb|ℕ| is itself of the type \verb|Set|.
+\end{Verbatim}
+This is a data type declaration with two constructors. The first, nullary constructor simply represents zero. The second, unary constructor represent the successor function. For example to encode the number 5, we would write \verb|succ(succ(succ(succ(zero))))|.
+The type \verb|ℕ| is itself of the type \verb|Set|. \verb|Set| is a shorthand for \verb|Set₀|, which is itself of the type \verb|Set₁|, etc. This is akin to the universe hierarchy described in Subsection~\ref{universes}.
 
 Equipped with Peano numbers, we can now define the type of vectors.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     data Vec (A : Set) : ℕ → Set where
       []   : Vec A zero
       _::_ : {n : ℕ} → A →  Vec A n → Vec A (succ n)
-\end{verbatim}
+\end{Verbatim}
 A vector is parametrized by the type of it's elements \verb|A| and is itself of the type \verb|ℕ → Set|. Again we have two constructors; the first constructor simply represents an empty vector. The second constructor prepends a value to the head of a vector. For example, the vector $[1, 2, 3]$ would be represented as \verb|1 :: (2 :: (3 :: []))|.
 
 Compared to regular lists of any length, the immediate improvement is that now we can define our \verb|head| and \verb|tail| functions in a manner which enforces these to be only applied to non-empty vectors.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     head : {n : ℕ} → {A : Set} → Vec A (succ n) → A
     head (x :: _) = x
 
     tail : {n : ℕ} → {A : Set} → Vec A (succ n) → Vec A n
     tail (_ :: xs) = xs
-\end{verbatim}
+\end{Verbatim}
 Note that the length of the input vector is \verb|succ n|. This enforces the programmer to always pass to the function an input vector of length at least $1$, otherwise the type checker will not successfully verify the code.
 
 \paragraph{}
 We can define addition and multiplication on Peano numbers recursively.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     _+_ : ℕ → ℕ → ℕ
     zero + b = b
     (succ a) + b = succ (a + b)
@@ -140,9 +155,9 @@ We can define addition and multiplication on Peano numbers recursively.
     _*_ : ℕ → ℕ → ℕ
     zero * b = zero
     (succ a) * b = b + (a * b)
-\end{verbatim}
+\end{Verbatim}
 With these operations, we can now express more advanced functions on vectors.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     append : {n m : ℕ} → {A : Set} → Vec A n → Vec A m → Vec A (n + m)
     append [] ys = ys
     append (x :: xs) ys = x :: append xs ys
@@ -150,9 +165,9 @@ With these operations, we can now express more advanced functions on vectors.
     concat : {n m : ℕ} → {A : Set} → Vec (Vec A m) n → Vec A (n * m)
     concat [] = []
     concat (xs :: xss) = append xs (concat xss)
-\end{verbatim}
+\end{Verbatim}
 \verb|append| simply appends two vectors, whereas \verb|concat| concatenates a vector of vectors into a single vector. Note that each vector is of the same, fixed length $m$ inside the outer vector of length $n$. This is a natural way to encode matrices. As an example of a matrix function, we might want to extract the diagonal of a matrix. However, the matrix must be square! This is easy to express on the type level.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     map : {n : ℕ} → {A B : Set} → (A → B) → Vec A n → Vec B n
     map _ [] = []
     map f (x :: xs) = (f x) :: (map f xs)
@@ -160,14 +175,14 @@ With these operations, we can now express more advanced functions on vectors.
     diagonal : {n : ℕ} → {A : Set} → Vec (Vec A n) n → Vec A n
     diagonal [] = []
     diagonal (xs :: xss) = head xs :: diagonal (map tail xss)
-\end{verbatim}
+\end{Verbatim}
 
 \subsection{Natural deduction}
 In the previous subsection, we have seen a few examples of how dependent types can help us be more expressive about the types of our computations. In this subsection, we will look at another application of dependent types — theorem proving. Following the Curry–Howard Isomorphism, this should come as no surprise. Dependent types are very expressive, which is why they are fitting for the task. Now, let us prove some basic properties of Propositional logic.
 
 \paragraph{Conjunction}
 Our system will closely model the rules of Natural Deduction. We will define introduction as a data type constructor, and eliminations as functions.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     data _∧_ (P : Set) (Q : Set) : Set where
       _,_ : P → Q → (P ∧ Q)
 
@@ -176,24 +191,24 @@ Our system will closely model the rules of Natural Deduction. We will define int
 
     ∧-elim₂ : {P Q : Set} → (P ∧ Q) → Q
     ∧-elim₂ (p , q) = q
-\end{verbatim}
+\end{Verbatim}
 We can prove some basic properties of conjunction, e.g.~commutativity. We will implement a function, which — with the help of pattern matching — deconstructs the proof of $p ∧ q$ into proofs of $p$ and $q$, and then arranges them back into a conjunction in the required order. This corresponds with the standard understanding of implication in intuitionistic logic, namely that implication is a function which transforms proofs of the antecedent into proofs of the consequent.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     ∧-comm' : {P Q : Set} → (P ∧ Q) → (Q ∧ P)
     ∧-comm' (p , q) = (q , p)
-\end{verbatim}
+\end{Verbatim}
 Note that, strictly speaking, we have only proved one direction of the equivalence. In this simple case this makes no difference, as both directions are analogous, however in more complex proofs we would wish to prove both directions. We will therefore define equivalence on a meta-level (not inside our Natural Deduction system) and restate the commutativity proof.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     _⇔_ : (P : Set) → (Q : Set) → Set
     p ⇔ q = (p → q) ∧ (q → p)
 
     ∧-comm : {P Q : Set} → (P ∧ Q) ⇔ (Q ∧ P)
     ∧-comm = (∧-comm' , ∧-comm')
-\end{verbatim}
+\end{Verbatim}
 The commutativity proof now reflects our intuitive understanding of it. Both implications are analogous, therefore we can simply reuse our original proof in both directions.
 
 Associativity can be proved in a very similar fashion. We can view the first two functions as lemmas, and the third function as a corollary.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     ∧-assoc¹ : {P Q R : Set} → (P ∧ (Q ∧ R)) → ((P ∧ Q) ∧ R)
     ∧-assoc¹ (p , (q , r)) = ((p , q) , r)
 
@@ -202,11 +217,11 @@ Associativity can be proved in a very similar fashion. We can view the first two
 
     ∧-assoc : {P Q R : Set} → (P ∧ (Q ∧ R)) ⇔ ((P ∧ Q) ∧ R)
     ∧-assoc = (∧-assoc¹ , ∧-assoc²)
-\end{verbatim}
+\end{Verbatim}
 
 \paragraph{Disjunction}
 We will now define disjunction. As in Natural Deduction, we will employ two introductions and one elimination.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     data _∨_ (P : Set) (Q : Set) : Set where
       left : P → (P ∨ Q)
       right : Q → (P ∨ Q)
@@ -214,21 +229,21 @@ We will now define disjunction. As in Natural Deduction, we will employ two intr
     ∨-elim : {P Q R : Set} → (P → R) → (Q → R) → (P ∨ Q) → R
     ∨-elim f _ (left p) = f p
     ∨-elim _ g (right q) = g q
-\end{verbatim}
+\end{Verbatim}
 Once again, our functions closely model the rules of Natural Deduction. We will not concern ourselves with proofs of commutativity and associativity, as they are similar to those of conjunction.
 
 Instead, we will present proofs of theorems of both our logical connectives combined\footnote{That is, identities valid in the variety of Boolean algebras.}. A proof of absorption can be formalized thusly:
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     abs₁ : {P Q : Set} → (P ∧ (P ∨ Q)) ⇔ P
     abs₁ = (∧-elim₁ , λ p → (p , left p))
 
     abs₂ : {P Q : Set} → (P ∨ (P ∧ Q)) ⇔ P
     abs₂ = (∨-elim (λ x → x) ∧-elim₁ , left)
-\end{verbatim}
+\end{Verbatim}
 One direction of the theorems is always trivial; the other has to be constructed appropriately. For this, we utilize a lambda expression in the first theorem, and we have to eliminate a disjunction in the second theorem — in this case, the identity function comes in handy.
 
 Finally, we shall prove the distributive laws. These are a bit more wordy, however they follow the same principles of simply reorganizing the formulas as we require.
-\begin{verbatim}
+\begin{Verbatim}[samepage=true]
     distrib₁¹ : {P Q R : Set} → (P ∧ (Q ∨ R)) → ((P ∧ Q) ∨ (P ∧ R))
     distrib₁¹ (p , (left q)) = left (p , q)
     distrib₁¹ (p , (right r)) = right (p , r)
@@ -239,8 +254,8 @@ Finally, we shall prove the distributive laws. These are a bit more wordy, howev
 
     distrib₁ : {P Q R : Set} → (P ∧ (Q ∨ R)) ⇔ ((P ∧ Q) ∨ (P ∧ R))
     distrib₁ = (distrib₁¹ , distrib₁²)
-
-
+\end{Verbatim}
+\begin{Verbatim}[samepage=true]
     distrib₂¹ : {P Q R : Set} → (P ∨ (Q ∧ R)) → ((P ∨ Q) ∧ (P ∨ R))
     distrib₂¹ (left p) = (left p , left p)
     distrib₂¹ (right (q , r)) = (right q , right r)
@@ -252,10 +267,12 @@ Finally, we shall prove the distributive laws. These are a bit more wordy, howev
 
     distrib₂ : {P Q R : Set} → (P ∨ (Q ∧ R)) ⇔ ((P ∨ Q) ∧ (P ∨ R))
     distrib₂ = (distrib₂¹ , distrib₂²)
-\end{verbatim}
+\end{Verbatim}
 Note that at several occasions we have avoided having to use disjunction elimination, and instead utilized pattern matching to handle the distinct possibilities of deconstructing a proof of $p ∨ q$ and finding within a proof of either $p$, or $q$.
 
-\section{A note on decidability}
+\section{Concluding remarks}
+We saw that dependent types are a very powerful formalism with firm grounds in Logic. Dependent types can not only help us be more expressive about our computations, but can also serve as a constructive basis for mathematics.
 
+\newpage
 \printbibliography{}
 \end{document}
