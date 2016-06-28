@@ -1,7 +1,7 @@
 \documentclass[12pt]{article}
 \usepackage{fontspec}
 \setmainfont{Latin Modern Math}
-\setmonofont[Scale=0.85]{DejaVu Sans Mono}
+\setmonofont[Scale=0.8]{DejaVu Sans Mono}
 \usepackage{unicode-math}
 \usepackage[english]{babel}
 \usepackage{proof}
@@ -12,6 +12,7 @@
 \usepackage{latexsym}
 \usepackage{tikz-cd}
 \usepackage{booktabs}
+
 \usepackage{fancyvrb}
 
 \usepackage[backend=bibtex, sorting=none]{biblatex}
@@ -25,7 +26,7 @@
         Faculty of Informatics\\
         Masaryk University, Brno
 }
-\date{27.6.2016}
+\date{28.6.2016}
 
 
 \begin{document}
@@ -36,7 +37,7 @@ This short paper aims to give an intuitive overview of Dependent types, their co
 \end{abstract} 
 
 \section{Introduction}
-In sections 3 and 4, some prior knowledge of the Curry-Howard isomorphism and related topics is assumed. This can be found in e.g.~\cite{mcadams2013tutorial}.
+In sections 3 and 4, some prior knowledge of the Curry-Howard correspondence and related topics is assumed. This can be found in e.g.~\cite{mcadams2013tutorial}.
 
 \section{Definitions}
 \paragraph{λ→} refers to the Simply typed λ calculus.
@@ -68,7 +69,7 @@ Here, $\mathcal{U}$ stands for the type of all the types in our system, excludin
 
 \subsection{λΠω}
 \label{universes}
-When we further allow the operators to range over higher types, we obtain the system $λΠω$. Here we define a hierarchy of so-called universes, where the type $\mathcal{U}$ from the previous section (whose type was unclear, or perhaps it did not have a type at all) becomes $\mathcal{U}₀$ of the type $\mathcal{U}₁$, which is itself of the type $\mathcal{U}₂$, and so on; these are the universes. This hierarchy lets us define higher level functions, e.g.~the type $ℕ → \mathcal{U}₀$ (type of a function, which to each natural number assigns a type from the universe $\mathcal{U}₀$) would live inside the universe $\mathcal{U}₁$.
+When we further allow the operators to range over higher types, we obtain the system $λΠω$. Here we define a hierarchy of so-called universes, where the type $\mathcal{U}$ from the previous section (whose type was unclear, or perhaps it did not have a type at all) becomes $\mathcal{U}₀$ of the type $\mathcal{U}₁$, which is itself of the type $\mathcal{U}₂$, and so on; these are the universes. This hierarchy lets us define higher level functions, e.g.~a function of the type $ℕ → \mathcal{U}₀$ (a function, which to each natural number assigns a type from the universe $\mathcal{U}₀$) would live inside the universe $\mathcal{U}₁$.
 
 This system, with some extensions, serves as the basis for the proof assistant Coq~\cite{bertot2013interactive}. This hierarchy is outlined in Figure~\ref{lc}.
 
@@ -91,9 +92,9 @@ Curry was first to observe that types of combinators in Combinatory logic corres
 \begin{tabular}{c c}
     Natural deduction & λ→ \\
     \toprule
-    propositions & types of terms \\
-    proofs & programs \\
-    proof normalization & program execution \\
+    propositions & types \\
+    proofs & type derivations \\
+    proof normalization & conversion into normal form \\
 \end{tabular}
 \end{center}
 Lambek showed that the correspondence can be extended to cartesian closed categories, thus making it three-fold.
@@ -115,7 +116,7 @@ Predicates serve the role of type constructors — if $A$ is a n-ary predicate, 
 The language of First-order logic usually includes also equality. It is also necessary to decide the unifiability of some types when attempting to type check function application. Compared to the type system of λ→, this task is less trivial in dependently typed systems. Consider, for example, the type of vectors of natural numbers of length 3: $\operatorname{Vecℕ}(3)$. When working with natural numbers, we might find it convenient to define addition — thus allowing us to write e.g.~$\operatorname{Vecℕ}(2 + 1)$ to express the same type. This has the consequence of having to perform computation on the type level when type checking our programs. Thus it is convenient to limit ourselves to total functions on the type level, else the type checking of our program becomes undecidable.
 
 \section{Dependent types in practice}
-In this section, I have included a practical demonstration of dependent types. We will use a proof assistant/programming language based on intuitionistic type theory called Agda~\cite{norell2007towards}. Agda is even more expressive than λΠω, as it constitutes a so-called Pure Type System. Pure Type Systems are a generalization over the systems of the λ cube from Figure~\ref{lc}~\cite{sorensen2006lectures}.
+In this section, I have included a practical demonstration of dependent types. We will use a proof assistant/programming language based on intuitionistic type theory called Agda~\cite{norell2007towards}. Agda is even more expressive than λΠω, as it constitutes something akin to a so-called Pure Type System\footnote{Perhaps with some extensions, which are yet to be formally well described.}. Pure Type Systems are a generalization over the systems of the λ cube from Figure~\ref{lc}~\cite{sorensen2006lectures}.
 
 \subsection{Vectors}
 We have already seen that dependent types make it possible to define vectors of fixed length. To encode vectors in Agda, we will first have to define natural numbers.
@@ -124,7 +125,7 @@ We have already seen that dependent types make it possible to define vectors of 
       zero : ℕ 
       succ : ℕ → ℕ
 \end{Verbatim}
-This is a data type declaration with two constructors. The first, nullary constructor simply represents zero. The second, unary constructor represent the successor function. For example to encode the number 5, we would write \verb|succ(succ(succ(succ(zero))))|.
+This is a data type declaration with two constructors. The first, nullary constructor simply represents zero. The second, unary constructor represent the successor function. For example to encode the number 4, we would write \verb|succ(succ(succ(succ(zero))))|.
 The type \verb|ℕ| is itself of the type \verb|Set|. \verb|Set| is a shorthand for \verb|Set₀|, which is itself of the type \verb|Set₁|, etc. This is akin to the universe hierarchy described in Subsection~\ref{universes}.
 
 Equipped with Peano numbers, we can now define the type of vectors.
@@ -135,7 +136,7 @@ Equipped with Peano numbers, we can now define the type of vectors.
 \end{Verbatim}
 A vector is parametrized by the type of it's elements \verb|A| and is itself of the type \verb|ℕ → Set|. Again we have two constructors; the first constructor simply represents an empty vector. The second constructor prepends a value to the head of a vector. For example, the vector $[1, 2, 3]$ would be represented as \verb|1 :: (2 :: (3 :: []))|.
 
-Compared to regular lists of any length, the immediate improvement is that now we can define our \verb|head| and \verb|tail| functions in a manner which enforces these to be only applied to non-empty vectors.
+Compared to regular lists of unknown length, the immediate improvement is that now we can define our \verb|head| and \verb|tail| functions in a manner which enforces these to be only applied to non-empty vectors.
 \begin{Verbatim}[samepage=true]
     head : {n : ℕ} → {A : Set} → Vec A (succ n) → A
     head (x :: _) = x
@@ -143,7 +144,7 @@ Compared to regular lists of any length, the immediate improvement is that now w
     tail : {n : ℕ} → {A : Set} → Vec A (succ n) → Vec A n
     tail (_ :: xs) = xs
 \end{Verbatim}
-Note that the length of the input vector is \verb|succ n|. This enforces the programmer to always pass to the function an input vector of length at least $1$, otherwise the type checker will not successfully verify the code.
+Note that the length of the input vector is \verb|succ n|. This enforces the programmer to always pass to the function an input vector of length at least $1$, otherwise the type checker will not successfully verify the program.
 
 \paragraph{}
 We can define addition and multiplication on Peano numbers recursively.
@@ -166,7 +167,7 @@ With these operations, we can now express more advanced functions on vectors.
     concat [] = []
     concat (xs :: xss) = append xs (concat xss)
 \end{Verbatim}
-\verb|append| simply appends two vectors, whereas \verb|concat| concatenates a vector of vectors into a single vector. Note that each vector is of the same, fixed length $m$ inside the outer vector of length $n$. This is a natural way to encode matrices. As an example of a matrix function, we might want to extract the diagonal of a matrix. However, the matrix must be square! This is easy to express on the type level.
+\verb|append| simply appends two vectors, whereas \verb|concat| concatenates a vector of vectors into a single vector. Note that each vector is of the same, fixed length $m$ inside the outer vector of length $n$. This is a natural way to encode matrices. As an example of a matrix function, we might want to extract the diagonal of a matrix. However, the matrix must be square! For us, this is easy to express on the type level.
 \begin{Verbatim}[samepage=true]
     map : {n : ℕ} → {A B : Set} → (A → B) → Vec A n → Vec B n
     map _ [] = []
@@ -177,8 +178,9 @@ With these operations, we can now express more advanced functions on vectors.
     diagonal (xs :: xss) = head xs :: diagonal (map tail xss)
 \end{Verbatim}
 
+
 \subsection{Natural deduction}
-In the previous subsection, we have seen a few examples of how dependent types can help us be more expressive about the types of our computations. In this subsection, we will look at another application of dependent types — theorem proving. Following the Curry–Howard Isomorphism, this should come as no surprise. Dependent types are very expressive, which is why they are fitting for the task. Now, let us prove some basic properties of Propositional logic.
+In the previous subsection, we have seen a few examples of how dependent types can help us be more expressive about the types of our computations. In this subsection, we will look at another application of dependent types — theorem proving. Following the Curry–Howard correspondence, this should come as no surprise. Dependent types are very expressive, which is why they are fitting for the task. Now, let us prove some basic properties of Propositional logic.
 
 \paragraph{Conjunction}
 Our system will closely model the rules of Natural Deduction. We will define introduction as a data type constructor, and eliminations as functions.
