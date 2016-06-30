@@ -270,7 +270,7 @@ Finally, we shall prove the distributive laws. These are a bit more wordy, howev
     distrib₂ : {P Q R : Set} → (P ∨ (Q ∧ R)) ⇔ ((P ∨ Q) ∧ (P ∨ R))
     distrib₂ = (distrib₂¹ , distrib₂²)
 \end{Verbatim}
-Note that at several occasions we have avoided having to use disjunction elimination, and instead utilized pattern matching to handle the distinct possibilities of deconstructing a proof of $p ∨ q$ and finding within a proof of either $p$, or $q$.
+Note that at several occasions we have avoided having to use disjunction elimination, and instead utilized pattern matching to handle the distinct possibilities of deconstructing a proof of $p ∨ q$ and finding within a proof of either $p$, or $q$. As per the Curry-Howard correspondence, this essentially amounts to the same thing. We take advantage of using pattern matching on the meta-level, rather than having to use \verb|∨-elim| directly.
 
 \section{Concluding remarks}
 We saw that dependent types are a very powerful formalism with firm grounds in Logic. Dependent types can not only help us be more expressive about our computations, but can also serve as a constructive basis for mathematics.
